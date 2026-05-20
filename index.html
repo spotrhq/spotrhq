@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" onerror="window.L=null;console.warn('Leaflet failed to load')"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" onerror="window.emailjs=null;console.warn('EmailJS failed to load')"></script>
 <style>
 :root{--bg:#0d1e3d;--surface:#112244;--card:#163060;--border:#1e3a6e;--accent:#00e5ff;--accent2:#ff4d6d;--accent3:#aaff00;--text:#e8edf8;--muted:#6b85b0;--blue:#1a5fa8;--blue-light:#60a5fa;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -39,7 +39,7 @@ header{padding:28px 0 20px;border-bottom:1px solid var(--border);display:flex;al
 main{padding:24px 0 40px;}
 .grid{display:grid;grid-template-columns:380px 1fr;gap:20px;}
 @media(max-width:900px){.grid{grid-template-columns:1fr;}}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}.panel.map-panel{overflow:visible !important;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}.panel.map-panel{overflow:hidden;border-radius:16px;}
 .panel-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .panel-title{font-size:.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 .panel-body{padding:16px;}
@@ -130,8 +130,8 @@ input[type="range"]::-webkit-slider-thumb{appearance:none;width:16px;height:16px
 .email-status.sending{color:var(--accent);}
 
 /* Map/Radar */
-.map-panel{min-height:520px;position:relative;}
-#radarCanvas{width:100%;height:520px;display:block;}
+.map-panel{min-height:520px;position:relative;overflow:hidden;}
+#radarCanvas{width:100%;height:520px;display:block;margin-bottom:0;}
 #mapView{width:100%;height:520px;display:none;pointer-events:auto;}
 .leaflet-tile{filter:brightness(.55) saturate(.4) hue-rotate(200deg);}
 .leaflet-container{background:#081422 !important;}
@@ -247,8 +247,8 @@ select option{background:var(--card);}
 }
 
 /* ── Map Overlay Toolbar ── */
-.map-toolbar{display:none;position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:9500;pointer-events:all;background:rgba(13,30,61,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(26,95,168,.6);border-radius:30px;padding:6px 10px;flex-direction:row;gap:4px;box-shadow:0 4px 28px rgba(0,0,0,.5);}
-@media(max-width:820px){.map-toolbar{display:flex !important;}}
+.map-toolbar{display:none;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:1000;width:auto;pointer-events:all;background:rgba(13,30,61,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(26,95,168,.6);border-radius:30px;padding:6px 10px;flex-direction:row;gap:4px;box-shadow:0 4px 28px rgba(0,0,0,.5);}
+
 .mt-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;background:none;border:none;border-radius:20px;cursor:pointer;transition:all .2s;min-width:52px;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,229,255,.2);}
 .mt-btn:hover,.mt-btn.active{background:rgba(26,95,168,.3);}
 .mt-btn-icon{font-size:18px;line-height:1;}
@@ -260,7 +260,7 @@ select option{background:var(--card);}
 /* ── Bottom Drawer ── */
 .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;}
 .drawer-overlay.open{display:block;}
-.bottom-drawer{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:16px 16px 0 0;border:1px solid var(--border);border-bottom:none;z-index:9001;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);max-height:80vh;overflow-y:auto;}
+.bottom-drawer{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:16px 16px 0 0;border:1px solid var(--border);border-bottom:none;z-index:9001;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);max-height:75vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);}
 .bottom-drawer.open{transform:translateY(0);}
 .drawer-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
 .drawer-header{padding:14px 20px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -293,27 +293,25 @@ select option{background:var(--card);}
 /* Mobile: show hero, hide settings panel (redundant), reorder */
 @media(max-width:820px){
   .grid{display:flex;flex-direction:column;}
-  .grid>div:first-child{order:2;} /* controls below */
-  .grid>div:first-child{display:none !important;} /* hide left column entirely on mobile */
-  .grid>div:last-child{order:1;}  /* map first */
+  .grid>div:first-child{order:2;display:none !important;} /* hide desktop left column on mobile */
+  .grid>div:last-child{order:1;} /* map panel */
   #desktopSettingsPanel{display:none !important;}
   #alertRulesPanel{display:none !important;}
-  #radarCanvas{height:360px;}
+  #radarCanvas{height:360px;padding-bottom:0;}
   #mapView{height:360px;}
-  .map-panel{min-height:360px;}
+  .map-panel{min-height:400px;}
   header{padding:10px 14px;}
   .stats-bar{padding:8px 14px;gap:8px;font-size:.62rem;}
   .container{padding:0 10px;}
-  main{padding:12px 0 100px;}
+  main{padding:12px 0 140px;}
   .grid{gap:10px;}
   #heroPanel{margin-bottom:10px;}
   /* On mobile, show radius inside hero panel */
   #mobileRadius{display:block !important;}
+  .map-toolbar{display:flex !important;}
 }
 
-/* Pill bounce */
-@keyframes pillBounce{
-  0%,100%{transform:translateX(-50%) translateY(0);}
+
   50%{transform:translateX(-50%) translateY(-6px);}
 }
 
@@ -561,7 +559,7 @@ select option{background:var(--card);}
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
       <button onclick="showReleaseNotes()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(26,95,168,.15);border:1px solid rgba(26,95,168,.4);border-radius:8px;color:#60a5fa;font-family:Space Mono,monospace;font-size:.65rem;cursor:pointer;letter-spacing:1px;transition:all .2s" onmouseover="this.style.background='rgba(26,95,168,.25)'" onmouseout="this.style.background='rgba(26,95,168,.15)'">📋 Release Notes</button>
-      <a href="mailto:hello@spotrhq.com" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(26,95,168,.15);border:1px solid rgba(26,95,168,.4);border-radius:8px;color:#60a5fa;font-family:Space Mono,monospace;font-size:.65rem;text-decoration:none;letter-spacing:1px;transition:all .2s" onmouseover="this.style.background='rgba(26,95,168,.25)'" onmouseout="this.style.background='rgba(26,95,168,.15)'">✉ Contact</a>
+      <a href="mailto:spotrhq@gmail.com" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(26,95,168,.15);border:1px solid rgba(26,95,168,.4);border-radius:8px;color:#60a5fa;font-family:Space Mono,monospace;font-size:.65rem;text-decoration:none;letter-spacing:1px;transition:all .2s" onmouseover="this.style.background='rgba(26,95,168,.25)'" onmouseout="this.style.background='rgba(26,95,168,.15)'">✉ Contact</a>
       <div class="status-bar">
         <div class="status-dot" id="statusDot"></div>
         <span id="statusText">Not tracking</span>&nbsp;·&nbsp;
@@ -592,8 +590,7 @@ select option{background:var(--card);}
     <div><div id="badgeToastTitle" style="font-weight:800;color:#ffd700;font-size:.9rem"></div><div id="badgeToastDesc" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div></div>
   </div>
 
-  <!-- Floating View Map pill (mobile) -->
-  <div id="viewMapPill" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-family:Syne,sans-serif;font-weight:700;font-size:.82rem;padding:10px 22px;border-radius:30px;box-shadow:0 4px 20px rgba(26,95,168,.5);z-index:8000;cursor:pointer;animation:pillBounce 2s infinite;white-space:nowrap" onclick="scrollToMap()">🗺 View Map ↓</div>
+  
 
 
   <main>
@@ -615,7 +612,7 @@ select option{background:var(--card);}
           </div>
         </div>
         <div class="input-group" style="margin-bottom:12px">
-          <label>Your ZIP Code</label>
+          <label>Your Location</label>
           <div style="display:flex;gap:8px">
             <input type="text" id="zipInputHero" placeholder="ZIP code or city name..." onkeydown="if(event.key==='Enter')lookupZip()" style="flex:1;font-size:1rem;padding:12px 14px">
             <button class="action-btn" onclick="lookupZip()" style="padding:12px 16px;font-size:.85rem">📍 Set</button>
@@ -641,7 +638,7 @@ select option{background:var(--card);}
           <div class="panel-header"><span class="panel-title">📍 Location & Settings</span></div>
           <div class="panel-body">
             <div class="input-group" style="margin-bottom:12px">
-              <label>ZIP Code (US)</label>
+              <label>Your Location</label>
               <div class="row">
                 <input type="text" id="zipInput" placeholder="ZIP code or city name..." onkeydown="if(event.key==='Enter')lookupZip()">
                 <button class="action-btn" onclick="lookupZip()">📍 Set</button>
@@ -803,8 +800,26 @@ select option{background:var(--card);}
               </div>
             </div>
           </div>
-          <canvas id="radarCanvas" style="display:none"></canvas>
-          <div id="mapView" style="display:block"></div>
+          <canvas id="radarCanvas" style="display:none;position:relative"></canvas>
+          <div id="mapView" style="display:block;position:relative">
+          <div class="map-toolbar" id="mapToolbar">
+            <button class="mt-btn" id="mtAlerts" onclick="openDrawer('alerts')">
+              <div class="mt-btn-icon">🔔</div><div class="mt-btn-label">Alerts</div><div class="mt-badge" id="mtAlertsBadge"></div>
+            </button>
+            <button class="mt-btn" id="mtBigFella" onclick="openDrawer('bigfella')">
+              <div class="mt-btn-icon">🦧</div><div class="mt-btn-label">Big Fella</div>
+            </button>
+            <button class="mt-btn" id="mtPrecious" onclick="openDrawer('precious')">
+              <div class="mt-btn-icon">❤️</div><div class="mt-btn-label" style="font-size:.44rem;line-height:1.2">Precious<br>Cargo</div>
+            </button>
+            <button class="mt-btn" id="mtAltitude" onclick="openDrawer('altitude')">
+              <div class="mt-btn-icon">📏</div><div class="mt-btn-label">Altitude</div><div class="mt-badge" id="mtAltBadge"></div>
+            </button>
+            <button class="mt-btn" id="mtSettings" onclick="openDrawer('settings')">
+              <div class="mt-btn-icon">⚙️</div><div class="mt-btn-label">Settings</div>
+            </button>
+          </div>
+        </div>
 
         </div>
 
@@ -907,7 +922,7 @@ function ktToMph(ms){return ms?Math.round(ms*1.94384*1.15078)+' mph':'—';}
 function miStr(km){return km!=null?(kmToMi(km)).toFixed(1)+' mi':'—';}
 
 // ─── EmailJS ──────────────────────────────────────────────────────────────────
-emailjs.init('qJzd0LR-8oHCo1kca');
+if(window.emailjs) emailjs.init('qJzd0LR-8oHCo1kca');
 const EJS_SVC='service_vnzwivk',EJS_TPL='template_7cb8uho';
 let emailAlertsEnabled=false,userEmail='';
 
@@ -929,6 +944,7 @@ async function sendEmailAlert(params){
   const el=document.getElementById('emailStatus');
   el.textContent='📤 Sending...';el.className='email-status sending';
   try{
+    if(!window.emailjs) throw new Error('Email service not available');
     await emailjs.send(EJS_SVC,EJS_TPL,{user_email:userEmail,...params});
     el.textContent='✅ Email sent! ('+new Date().toLocaleTimeString()+')';el.className='email-status on';
   }catch(e){el.textContent='⚠ Email failed: '+e.text;el.className='email-status err';}
@@ -955,11 +971,12 @@ function updateTypeCount(){
   document.getElementById('typeCount').textContent=n>0?n+' selected':'';
 }
 document.getElementById('cargoDate').value=new Date().toISOString().split('T')[0];
-loadScore();
-renderBadges();
-initDailyChallenge();
-recordStreak();
-setTimeout(()=>document.getElementById('zipInput').focus(),500);
+// Pre-init map on mobile
+if(window.innerWidth<=820){
+  setTimeout(()=>{try{initMap();}catch(e){console.warn('Map pre-init failed:',e);}},1000);
+}
+// init moved to end of script
+
 
 // Page visibility API — pause when hidden
 document.addEventListener('visibilitychange',()=>{
@@ -1016,40 +1033,83 @@ async function lookupZip(){
   const activeInput=heroInput&&heroInput.offsetParent?heroInput:desktopInput;
   const query=activeInput?activeInput.value.trim():'';
   const btns=document.querySelectorAll('[onclick="lookupZip()"]');
-  const el=document.getElementById('zipResult');
-  if(!query){el.textContent='⚠ Enter a ZIP code or city name.';el.className='zip-result error';return;}
+  if(!query){setZipResult('⚠ Enter a ZIP code or city name.','error');return;}
   btns.forEach(b=>{b.textContent='⏳...';b.disabled=true;});
-  el.textContent='';el.className='zip-result';
-  const isZip=/^\d{5}$/.test(query);
+  setZipResult('','');
+  const isZip=/^[0-9]{5}$/.test(query);
   try{
     if(isZip){
       const res=await fetch('https://api.zippopotam.us/us/'+query);
       if(!res.ok) throw new Error('ZIP not found');
       const data=await res.json(),p=data.places[0];
       userLat=parseFloat(p.latitude);userLon=parseFloat(p.longitude);
-      userCity=p['place name']+', '+p['state abbreviation'];
+      userCity=p['place name']+', '+p['state abbreviation']+', US';
+      setLocation();
     } else {
-      const res=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(query)+'&format=json&limit=1',{headers:{'Accept-Language':'en','User-Agent':'SpotrHQ/1.0'}});
+      const res=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(query)+'&format=json&limit=5&addressdetails=1',{headers:{'Accept-Language':'en','User-Agent':'SpotrHQ/1.0'}});
       if(!res.ok) throw new Error('City not found');
       const data=await res.json();
-      if(!data||!data.length) throw new Error('Location not found');
-      userLat=parseFloat(data[0].lat);userLon=parseFloat(data[0].lon);
-      const parts=data[0].display_name.split(',');
-      userCity=parts.slice(0,2).join(',').trim();
+      if(!data||!data.length) throw new Error('No results found for "'+query+'"');
+      if(data.length===1){setLocationFromNominatim(data[0]);}
+      else{showCitySuggestions(data);btns.forEach(b=>{b.textContent='📍 Set';b.disabled=false;});return;}
     }
-    document.getElementById('lat').value=userLat;
-    document.getElementById('lon').value=userLon;
-    el.textContent='✅ '+userCity;el.className='zip-result success';
-  const elH=document.getElementById('zipResultHero');if(elH){elH.textContent='✅ '+userCity;elH.className='zip-result success';}
-    showToast('📍','Location Set',userCity);
-    if(leafletMap) addUserMapMarker();
-    enableScanBtn();
-  }catch(e){
-    el.textContent='⚠ Location not found. Try a city name or ZIP code.';
-  const elHe=document.getElementById('zipResultHero');if(elHe){elHe.textContent='⚠ Not found.';elHe.className='zip-result error';}
-    el.className='zip-result error';
-  }
+  }catch(e){setZipResult('⚠ '+e.message,'error');}
   btns.forEach(b=>{b.textContent='📍 Set';b.disabled=false;});
+}
+
+let citySuggestions=[];
+
+function setLocationFromNominatim(place){
+  userLat=parseFloat(place.lat);userLon=parseFloat(place.lon);
+  const a=place.address||{};
+  const city=a.city||a.town||a.village||a.municipality||a.county||'';
+  const state=a.state||a.region||'';
+  const country=a.country||'';
+  userCity=[city,state,country].filter(Boolean).join(', ');
+  setLocation();
+}
+
+function setLocation(){
+  document.getElementById('lat').value=userLat;
+  document.getElementById('lon').value=userLon;
+  setZipResult('✅ '+userCity,'success');
+  showToast('📍','Location Set',userCity);
+  if(leafletMap) addUserMapMarker();
+  enableScanBtn();
+  hideCitySuggestions();
+}
+
+function setZipResult(text,type){
+  ['zipResult','zipResultHero'].map(id=>document.getElementById(id)).filter(Boolean).forEach(el=>{
+    el.innerHTML=text;el.className='zip-result'+(type?' '+type:'');
+  });
+}
+
+function showCitySuggestions(results){
+  citySuggestions=results;
+  const html='<div style="margin-top:6px"><div style="font-size:.6rem;color:var(--muted);font-family:Space Mono,monospace;margin-bottom:4px;letter-spacing:1px">MULTIPLE RESULTS — SELECT ONE:</div>'+
+    results.slice(0,5).map((r,i)=>{
+      const a=r.address||{};
+      const city=a.city||a.town||a.village||a.municipality||a.county||'';
+      const state=a.state||a.region||'';
+      const country=a.country||'';
+      const label=[city,state,country].filter(Boolean).join(', ');
+      return '<div onclick="selectCity('+i+')" style="padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;cursor:pointer;font-size:.72rem;color:var(--text)">📍 '+label+'</div>';
+    }).join('')+'</div>';
+  ['zipResult','zipResultHero'].map(id=>document.getElementById(id)).filter(Boolean).forEach(el=>el.innerHTML=html);
+}
+
+function hideCitySuggestions(){
+  ['zipResult','zipResultHero'].map(id=>document.getElementById(id)).filter(Boolean).forEach(el=>{
+    if(el.innerHTML.includes('MULTIPLE RESULTS')) el.innerHTML='';
+  });
+}
+
+function selectCity(idx){
+  const place=citySuggestions[idx];
+  if(!place) return;
+  setLocationFromNominatim(place);
+  document.querySelectorAll('[onclick="lookupZip()"]').forEach(b=>{b.textContent='📍 Set';b.disabled=false;});
 }
 
 // ─── View ─────────────────────────────────────────────────────────────────────
@@ -1069,6 +1129,7 @@ function switchView(view){
 }
 
 function initMap(){
+  if(!window.L){console.warn('Leaflet not loaded');return;}
   if(leafletMap){leafletMap.invalidateSize();if(userLat)leafletMap.setView([userLat,userLon],9);return;}
   const center=userLat?[userLat,userLon]:[39.5,-98.35];
   leafletMap=L.map('mapView').setView(center,userLat?9:4);
@@ -1227,7 +1288,7 @@ function pollAllCargo(){preciousCargos.forEach(c=>fetchCargoStatus(c));}
 function isPreciousCargo(f){
   if(!preciousCargos.length) return false;
   const today=new Date().toISOString().split('T')[0];
-  return preciousCargos.some(c=>c.date===today&&f.callsign&&f.callsign.toUpperCase().replace(/\s/g,'').includes(c.flight.replace(/\s/g,'')));
+  return preciousCargos.some(c=>c.date===today&&f.callsign&&f.callsign.toUpperCase().replace(/ /g,'').includes(c.flight.replace(/ /g,'')));
 }
 
 // ─── Custom Alerts ────────────────────────────────────────────────────────────
@@ -1274,9 +1335,7 @@ async function startScan(){
   scanning=true;
   ['scanBtn','scanBtnHero'].forEach(id=>{const b=document.getElementById(id);if(b){b.textContent='⏹ Stop Spotting';b.disabled=false;b.style.opacity='1';b.style.cursor='pointer';b.classList.remove('pulse');}});
   document.getElementById('skyStatsPanel').style.display='block';
-  document.getElementById('scanBtn').classList.remove('pulse');
   dismissOnboarding();
-  showMapPill();
   setStatus('live','Scanning…');
   alertedCallsigns.clear();bigFellaEmailedCallsigns.clear();
   stats={total:new Set(),bf:0,alerts:0,precious:0};updateStats();
@@ -1309,20 +1368,30 @@ async function fetchFlights(){
     setStatus('live','Scanning · '+flights.length+' aircraft');
     startInactivityTimer();
   }catch(e){
-    setStatus('error','API Error');
-    document.getElementById('refreshInfo').textContent='Fetch failed — using demo data';
-    useDemoData(lat,lon,radiusKm);
+    console.error('fetchFlights error:', e);
+    setStatus('error','No flight data');
+    document.getElementById('refreshInfo').textContent='Retrying in '+scanIntervalSecs+'s...';
+    // Only use demo data if no real flights loaded yet
+    if(!flights.length) useDemoData(lat,lon,radiusKm);
   }
 }
 function processFlights(data,lat,lon,radiusKm){
   const raw=data.states||[];
-  flights=raw.map(s=>({
+  console.log('processFlights: raw states count='+raw.length+' radiusKm='+radiusKm);
+  const mapped=raw.map(s=>({
     icao24:s[0],callsign:(s[1]||'').trim()||'N/A',origin_country:s[2],
-    longitude:s[5],latitude:s[6],baro_altitude:s[7],
-    velocity:s[9],true_track:s[10],type:s[13]||'',
+    longitude:parseFloat(s[5])||null,latitude:parseFloat(s[6])||null,
+    baro_altitude:s[7]?parseFloat(s[7]):null,
+    velocity:s[9]?parseFloat(s[9]):null,
+    true_track:s[10]?parseFloat(s[10]):null,
+    type:s[13]||'',
     dep:s[14]||'',arr:s[15]||'',desc:s[16]||'',
-    dist:haversine(lat,lon,s[6],s[5])
-  })).filter(f=>f.latitude&&f.longitude&&f.dist<=radiusKm).sort((a,b)=>a.dist-b.dist);
+    dist:haversine(lat,lon,parseFloat(s[6]),parseFloat(s[5]))
+  }));
+  const withCoords=mapped.filter(f=>f.latitude&&f.longitude);
+  const inRadius=withCoords.filter(f=>f.dist<=radiusKm);
+  console.log('processFlights: with coords='+withCoords.length+' in radius='+inRadius.length);
+  flights=inRadius.sort((a,b)=>a.dist-b.dist);
 
   // Update flight history for trails
   flights.forEach(f=>{
@@ -1511,9 +1580,14 @@ function showToast(icon,title,body,isBF=false,isOrange=false,isPink=false){
   c.appendChild(t);setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},5000);
 }
 function dismissOnboarding(){
-  // heroPanel serves as onboarding on mobile
-  const ob=document.getElementById('heroPanel');
-  if(ob&&window.innerWidth<=820) ob.style.display='none';
+  // Don't hide hero panel - it contains the scan button
+  // Just scroll to map on mobile
+  if(window.innerWidth<=820){
+    setTimeout(()=>{
+      const mapEl=document.querySelector('.map-panel');
+      if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'start'});
+    },400);
+  }
 }
 
 // ─── Advanced Settings Toggle ─────────────────────────────────────────────────
@@ -1522,28 +1596,13 @@ function dismissOnboarding(){
 function scrollToMap(){
   const mapEl=document.querySelector('.map-panel');
   if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'start'});
-  document.getElementById('viewMapPill').style.display='none';
+
 }
 
-function showMapPill(){
-  if(window.innerWidth<=820){
-    document.getElementById('viewMapPill').style.display='block';
-    setTimeout(()=>{
-      document.getElementById('viewMapPill').style.display='none';
-    },8000);
-  }
-}
+
 
 // Hide pill when map is in view
-const mapObserver=new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting) document.getElementById('viewMapPill').style.display='none';
-  });
-},{threshold:0.3});
-document.addEventListener('DOMContentLoaded',()=>{
-  const mapEl=document.querySelector('.map-panel');
-  if(mapEl) mapObserver.observe(mapEl);
-});
+
 
 function syncRadius(val){
   document.getElementById('radius').value=val;
@@ -1571,6 +1630,7 @@ function enableScanBtn(){
     btn.textContent='✈ Start Spotting';
     btn.classList.add('pulse');
   });
+
 }
 
 // ─── Tooltip ──────────────────────────────────────────────────────────────────
@@ -1698,6 +1758,7 @@ function showScorePopup(pts, callsign){
 }
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
+// renderBadges called here after BADGES is defined
 const BADGES=[
   {id:'first_flight',icon:'🛫',name:'First Spotted',desc:'Spot your first flight',check:()=>stats.total.size>=1},
   {id:'big_fella_1',icon:'🦧',name:'Big Fella!',desc:'Spot your first Big Fella',check:()=>stats.bf>=1},
@@ -2233,26 +2294,26 @@ function openDrawer(name){
   if(btn) btn.classList.add('active');
 }
 
+
+// ─── Page Init (at end so all consts are defined) ────────────────────────────
+try{
+  loadScore();
+  renderBadges();
+  initDailyChallenge();
+  recordStreak();
+  setTimeout(()=>{
+    const isLocal=window.location.protocol==='file:';
+    if(window.innerWidth<=820&&!isLocal){
+      
+    }
+    const inp=document.getElementById('zipInputHero')||document.getElementById('zipInput');
+    if(inp) inp.focus();
+  },500);
+}catch(e){console.error('Init error:',e);}
+
 window.addEventListener('resize',()=>{if(!scanning&&currentView==='radar')drawRadar();});
 </script>
 
-<!-- Map Toolbar - Fixed at bottom on mobile -->
-<div class="map-toolbar" id="mapToolbar">
-  <button class="mt-btn" id="mtAlerts" onclick="openDrawer('alerts')">
-    <div class="mt-btn-icon">🔔</div><div class="mt-btn-label">Alerts</div><div class="mt-badge" id="mtAlertsBadge"></div>
-  </button>
-  <button class="mt-btn" id="mtBigFella" onclick="openDrawer('bigfella')">
-    <div class="mt-btn-icon">🦧</div><div class="mt-btn-label">Big Fella</div>
-  </button>
-  <button class="mt-btn" id="mtPrecious" onclick="openDrawer('precious')">
-    <div class="mt-btn-icon">❤️</div><div class="mt-btn-label" style="font-size:.44rem;line-height:1.2">Precious<br>Cargo</div>
-  </button>
-  <button class="mt-btn" id="mtAltitude" onclick="openDrawer('altitude')">
-    <div class="mt-btn-icon">📏</div><div class="mt-btn-label">Altitude</div><div class="mt-badge" id="mtAltBadge"></div>
-  </button>
-  <button class="mt-btn" id="mtSettings" onclick="openDrawer('settings')">
-    <div class="mt-btn-icon">⚙️</div><div class="mt-btn-label">Settings</div>
-  </button>
-</div>
+
 </body>
 </html>

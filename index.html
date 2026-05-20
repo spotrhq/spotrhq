@@ -39,7 +39,7 @@ header{padding:28px 0 20px;border-bottom:1px solid var(--border);display:flex;al
 main{padding:24px 0 40px;}
 .grid{display:grid;grid-template-columns:380px 1fr;gap:20px;}
 @media(max-width:900px){.grid{grid-template-columns:1fr;}}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}.panel.map-panel{overflow:visible !important;}
 .panel-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .panel-title{font-size:.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 .panel-body{padding:16px;}
@@ -130,9 +130,9 @@ input[type="range"]::-webkit-slider-thumb{appearance:none;width:16px;height:16px
 .email-status.sending{color:var(--accent);}
 
 /* Map/Radar */
-.map-panel{min-height:520px;}
+.map-panel{min-height:520px;position:relative;}
 #radarCanvas{width:100%;height:520px;display:block;}
-#mapView{width:100%;height:520px;display:none;}
+#mapView{width:100%;height:520px;display:none;pointer-events:auto;}
 .leaflet-tile{filter:brightness(.55) saturate(.4) hue-rotate(200deg);}
 .leaflet-container{background:#081422 !important;}
 .plane-popup .leaflet-popup-content-wrapper{background:#161b2e;border:1px solid #1e2640;border-radius:10px;color:#e8edf8;font-family:'Space Mono',monospace;font-size:.7rem;box-shadow:0 8px 24px rgba(0,0,0,.6);}
@@ -221,6 +221,7 @@ input[type="range"]::-webkit-slider-thumb{appearance:none;width:16px;height:16px
 .toast.removing{animation:toastOut .3s ease forwards;}
 @keyframes toastIn{from{transform:translateX(120%) scale(.9);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
 @keyframes toastOut{from{transform:translateX(0);opacity:1}to{transform:translateX(120%);opacity:0}}
+@keyframes badgeIn{from{transform:translateX(-50%) scale(.8);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 .toast-icon{font-size:20px;flex-shrink:0;}
 .toast-title{font-weight:700;font-size:.8rem;color:#c084fc;}
 .toast-title.orange{color:#ffa040;}
@@ -228,11 +229,326 @@ input[type="range"]::-webkit-slider-thumb{appearance:none;width:16px;height:16px
 .toast-body{font-size:.72rem;color:var(--muted);margin-top:2px;line-height:1.4;}
 select option{background:var(--card);}
 
+/* ── Release Notes Modal ── */
+.rn-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;}
+.rn-overlay.open{display:flex;}
+.rn-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;padding:24px;}
+.rn-close{float:right;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1;}
+.rn-version{margin-bottom:24px;}
+.rn-ver-header{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
+.rn-ver-num{font-family:Space Mono,monospace;font-size:.75rem;color:var(--accent);font-weight:700;}
+.rn-ver-title{font-size:1rem;font-weight:800;color:var(--text);}
+.rn-ver-date{font-family:Space Mono,monospace;font-size:.62rem;color:var(--muted);}
+.rn-item{font-size:.78rem;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4;}
+.rn-item:last-child{border:none;}
+@media(max-width:820px){
+  .rn-overlay{align-items:flex-end;}
+  .rn-modal{border-radius:16px 16px 0 0;max-width:100%;width:100%;max-height:75vh;}
+}
+
+/* ── Map Overlay Toolbar ── */
+.map-toolbar{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9500;pointer-events:all;background:rgba(13,30,61,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(26,95,168,.6);border-radius:30px;padding:6px 10px;flex-direction:row;gap:4px;box-shadow:0 4px 28px rgba(0,0,0,.5);}
+@media(max-width:820px){.map-toolbar{display:flex !important;}}
+.mt-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;background:none;border:none;border-radius:20px;cursor:pointer;transition:all .2s;min-width:52px;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,229,255,.2);}
+.mt-btn:hover,.mt-btn.active{background:rgba(26,95,168,.3);}
+.mt-btn-icon{font-size:18px;line-height:1;}
+.mt-btn-label{font-family:Space Mono,monospace;font-size:.5rem;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+.mt-btn.active .mt-btn-label{color:var(--accent);}
+.mt-badge{position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--accent);display:none;}
+.mt-btn.has-badge .mt-badge{display:block;}
+
+/* ── Bottom Drawer ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;}
+.drawer-overlay.open{display:block;}
+.bottom-drawer{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:16px 16px 0 0;border:1px solid var(--border);border-bottom:none;z-index:9001;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);max-height:80vh;overflow-y:auto;}
+.bottom-drawer.open{transform:translateY(0);}
+.drawer-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+.drawer-header{padding:14px 20px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.drawer-title{font-size:.85rem;font-weight:700;color:var(--text);}
+.drawer-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;}
+.drawer-body{padding:16px 20px 32px;}
+
+/* ── Altitude Slider ── */
+.altitude-presets{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.alt-preset{padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-family:Space Mono,monospace;font-size:.65rem;color:var(--muted);cursor:pointer;transition:all .2s;}
+.alt-preset.active{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent);}
+.range-labels{display:flex;justify-content:space-between;font-family:Space Mono,monospace;font-size:.62rem;color:var(--muted);margin-top:6px;}
+.altitude-display{text-align:center;font-family:Space Mono,monospace;font-size:.9rem;color:var(--accent);font-weight:700;margin:10px 0;}
+
+/* ── Airport Board ── */
+.airport-board-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.ab-tab{flex:1;padding:9px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:Syne,sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:1px;text-transform:uppercase;}
+.ab-tab.active{color:var(--blue-light);border-bottom-color:var(--blue);}
+.ab-flight-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.ab-flight-row:hover{background:rgba(26,95,168,.08);}
+.ab-flight-row:last-child{border:none;}
+.ab-callsign{font-family:Space Mono,monospace;font-size:.78rem;font-weight:700;color:var(--text);min-width:70px;}
+.ab-airline{font-size:.68rem;color:var(--blue-light);flex:1;}
+.ab-alt{font-family:Space Mono,monospace;font-size:.68rem;color:var(--accent);text-align:right;}
+/* ── Mobile layout ─────────────────────────────────── */
+/* Desktop: hide hero panel (ZIP is in left column settings) */
+@media(min-width:821px){
+  #heroPanel{display:none;}
+}
+/* Mobile: show hero, hide settings panel (redundant), reorder */
+@media(max-width:820px){
+  .grid{display:flex;flex-direction:column;}
+  .grid>div:first-child{order:2;} /* controls below */
+  .grid>div:first-child{display:none !important;} /* hide left column entirely on mobile */
+  .grid>div:last-child{order:1;}  /* map first */
+  #desktopSettingsPanel{display:none !important;}
+  #alertRulesPanel{display:none !important;}
+  #radarCanvas{height:360px;}
+  #mapView{height:360px;}
+  .map-panel{min-height:360px;}
+  header{padding:10px 14px;}
+  .stats-bar{padding:8px 14px;gap:8px;font-size:.62rem;}
+  .container{padding:0 10px;}
+  main{padding:12px 0 100px;}
+  .grid{gap:10px;}
+  #heroPanel{margin-bottom:10px;}
+  /* On mobile, show radius inside hero panel */
+  #mobileRadius{display:block !important;}
+}
+
+/* Pill bounce */
+@keyframes pillBounce{
+  0%,100%{transform:translateX(-50%) translateY(0);}
+  50%{transform:translateX(-50%) translateY(-6px);}
+}
+
+/* Challenge banner flex */
+#challengeBanner{display:none;}
+#challengeBanner.visible{display:flex;}
+
+.sky-stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.ssc-title{font-size:.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.ssc-value{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:#60a5fa;}
+.ssc-sub{font-size:.65rem;color:var(--muted);margin-top:3px;}
+.ssc-info{cursor:pointer;opacity:.6;font-size:.7rem;transition:opacity .2s;}
+.ssc-info:hover{opacity:1;}
+/* Tooltip */
+#sscTooltip{display:none;position:fixed;background:#0d1e3d;border:1px solid #1e3a6e;border-radius:8px;padding:8px 12px;font-size:.7rem;color:#e8edf8;max-width:200px;z-index:9999;pointer-events:none;line-height:1.4;}
+/* Badge panel */
+.badge-grid{display:flex;flex-wrap:wrap;gap:8px;padding:16px;}
+.badge-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:70px;opacity:.35;transition:all .3s;}
+.badge-item.earned{opacity:1;border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.05);}
+.badge-icon{font-size:1.6rem;}
+.badge-name{font-size:.58rem;font-family:Space Mono,monospace;color:var(--muted);text-align:center;letter-spacing:.5px;}
+.badge-item.earned .badge-name{color:#ffd700;}
+
 /* Airport markers */
 .airport-label{font-family:'Space Mono',monospace;font-size:10px;color:#aaff00;background:rgba(10,13,20,.8);padding:2px 5px;border-radius:4px;white-space:nowrap;}
 </style>
 </head>
 <body>
+<!-- Release Notes Modal -->
+<div class="rn-overlay" id="rnOverlay" onclick="if(event.target===this)closeReleaseNotes()">
+  <div class="rn-modal">
+    <button class="rn-close" onclick="closeReleaseNotes()">×</button>
+    <div style="margin-bottom:20px">
+      <div style="font-size:1.3rem;font-weight:800;color:var(--text)">📋 Release Notes</div>
+      <div style="font-family:Space Mono,monospace;font-size:.62rem;color:var(--muted);margin-top:4px">What we broke, fixed, and shipped</div>
+    </div>
+
+    <div class="rn-version">
+      <div class="rn-ver-header">
+        <span class="rn-ver-num">v0.4</span>
+        <span class="rn-ver-title">"The Map is the App"</span>
+      </div>
+      <div class="rn-ver-date">May 2026</div>
+      <div style="margin-top:10px">
+        <div class="rn-item">🗺 Map is now the hero on mobile — because nobody opens a flight tracker to stare at a settings panel</div>
+        <div class="rn-item">🎛 Map toolbar — all your controls now live on the map where they belong, like tiny aviation professionals</div>
+        <div class="rn-item">📏 Altitude filter — finally, a way to ignore the boring high-altitude traffic and focus on the low-and-slow interesting stuff</div>
+        <div class="rn-item">🛫 Airport board — tap any airport to see what's arriving and departing. Knowledge is power. Power is planes.</div>
+        <div class="rn-item">📋 Release Notes — you're reading them. Meta. We know.</div>
+        <div class="rn-item">🏅 Badges — because spotting a C-5 Galaxy at midnight deserves a trophy</div>
+        <div class="rn-item">🎯 Daily Challenges — we needed a reason for you to check in every day. This is it.</div>
+        <div class="rn-item">⭐ Spotter Score — your new favorite number to brag about at dinner parties</div>
+      </div>
+    </div>
+
+    <div class="rn-version">
+      <div class="rn-ver-header">
+        <span class="rn-ver-num">v0.3</span>
+        <span class="rn-ver-title">"Cleared for Approach"</span>
+      </div>
+      <div class="rn-ver-date">May 2026</div>
+      <div style="margin-top:10px">
+        <div class="rn-item">🦧 Big Fella Alert — silently highlights large aircraft without spamming you with popups. The orangutan stays.</div>
+        <div class="rn-item">❤️ Precious Cargo — track flights carrying people who matter. Or packages. No judgment.</div>
+        <div class="rn-item">📊 Sky Stats — finally know which airline is hogging your airspace (looking at you, United)</div>
+        <div class="rn-item">📧 Email alerts — get notified when something cool flies over. Check your spam folder first.</div>
+        <div class="rn-item">🌍 Navy blue color scheme — because dark mode wasn't dark enough</div>
+        <div class="rn-item">✈️ Airline names now shown — turns out "UAL234" means "United Airlines". You're welcome.</div>
+      </div>
+    </div>
+
+    <div class="rn-version">
+      <div class="rn-ver-header">
+        <span class="rn-ver-num">v0.2</span>
+        <span class="rn-ver-title">"Radar Contact"</span>
+      </div>
+      <div class="rn-ver-date">May 2026</div>
+      <div style="margin-top:10px">
+        <div class="rn-item">📡 Live flight data — goodbye demo mode, hello actual planes. Mostly.</div>
+        <div class="rn-item">🗺 Map view — the radar was cool but you asked for streets. Fine.</div>
+        <div class="rn-item">🛩 Flight trails — planes now leave a breadcrumb trail. Like Hansel and Gretel but faster and louder.</div>
+        <div class="rn-item">🏔 Nearby airports on map — helpful green dots that know more about your local airspace than you do</div>
+      </div>
+    </div>
+
+    <div class="rn-version">
+      <div class="rn-ver-header">
+        <span class="rn-ver-num">v0.1</span>
+        <span class="rn-ver-title">"First Flight"</span>
+      </div>
+      <div class="rn-ver-date">May 2026</div>
+      <div style="margin-top:10px">
+        <div class="rn-item">🛫 SpotrHQ takes off — built in a browser, deployed on vibes and caffeine</div>
+        <div class="rn-item">📡 Radar view — retro green sweep included at no extra charge. Very 1987.</div>
+        <div class="rn-item">🔔 Custom alerts — set it, forget it, then frantically check your email</div>
+        <div class="rn-item">📍 ZIP code location — because "near me" needed to mean something specific</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer Overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeAllDrawers()"></div>
+
+<!-- Alerts Drawer -->
+<div class="bottom-drawer" id="alertsDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">🔔 Alert Rules</span>
+    <button class="drawer-close" onclick="closeAllDrawers()">×</button>
+  </div>
+  <div class="drawer-body" id="alertsDrawerBody"></div>
+</div>
+
+<!-- Big Fella Drawer -->
+<div class="bottom-drawer" id="bigfellaDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">🦧 Big Fella Alert</span>
+    <button class="drawer-close" onclick="closeAllDrawers()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.25);border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.85rem;font-weight:700;color:#ffa040;margin-bottom:6px">The big boys of the sky</div>
+      <div style="font-size:.75rem;color:var(--muted);line-height:1.6">Get alerted when a large commercial or military aircraft enters your scan area. When within 1 mile, you'll also get an email saying "look up!"</div>
+    </div>
+    <div style="font-size:.68rem;font-family:Space Mono,monospace;color:var(--muted);margin-bottom:12px;line-height:1.8">
+      Airbus A380 · Boeing 747 · Boeing 777 · Boeing 787 Dreamliner · Airbus A350 · Airbus A330 · C-17 Globemaster · C-5 Galaxy
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+      <div>
+        <div style="font-size:.85rem;font-weight:700;color:var(--text)">Enable Big Fella Alert</div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:2px" id="bigFellaDrawerStatus">Currently OFF</div>
+      </div>
+      <button id="bigFellaDrawerToggle" onclick="toggleBigFellaFromDrawer()" style="padding:10px 20px;border-radius:20px;border:none;font-family:Syne,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;background:rgba(255,140,0,.15);color:#ffa040;border:1px solid rgba(255,140,0,.4);transition:all .2s">Turn ON</button>
+    </div>
+  </div>
+</div>
+
+<!-- Precious Cargo Drawer -->
+<div class="bottom-drawer" id="preciousDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">❤️ Precious Cargo</span>
+    <button class="drawer-close" onclick="closeAllDrawers()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div style="background:rgba(255,20,147,.08);border:1px solid rgba(255,20,147,.25);border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.85rem;font-weight:700;color:#ff69b4;margin-bottom:6px">Track flights that matter</div>
+      <div style="font-size:.75rem;color:var(--muted);line-height:1.6">Add a specific flight number and date to track. You'll get email alerts 1 hour before departure, when it takes off, and when it lands.</div>
+    </div>
+    <div class="cargo-form" style="margin-bottom:12px">
+      <div style="display:flex;gap:8px">
+        <div class="input-group" style="flex:1"><label>Flight Number</label><input type="text" id="cargoFlightDrawer" placeholder="e.g. B6517" style="text-transform:uppercase"></div>
+        <div class="input-group" style="flex:1"><label>Date</label><input type="date" id="cargoDateDrawer"></div>
+      </div>
+      <div class="input-group"><label>Label (optional)</label><input type="text" id="cargoLabelDrawer" placeholder="e.g. Mom's flight"></div>
+      <button class="add-btn pink" onclick="addPreciousCargoFromDrawer()">❤️ Add Precious Cargo</button>
+    </div>
+    <div class="cargo-list" id="cargoListDrawer"></div>
+  </div>
+</div>
+
+<!-- Alerts Drawer (rebuilt) -->
+<div class="bottom-drawer" id="alertsdrawer2">
+  <div class="drawer-handle"></div>
+</div>
+
+<!-- Altitude Drawer -->
+<div class="bottom-drawer" id="altitudeDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">📏 Altitude Filter</span>
+    <button class="drawer-close" onclick="closeAllDrawers()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="altitude-presets">
+      <button class="alt-preset" onclick="setAltPreset(0,5000,'Low &amp; Slow')">Low &amp; Slow<br><span style="font-size:.55rem">0–5,000ft</span></button>
+      <button class="alt-preset" onclick="setAltPreset(0,10000,'Approach')">Approach<br><span style="font-size:.55rem">0–10,000ft</span></button>
+      <button class="alt-preset" onclick="setAltPreset(25000,45000,'Cruise')">Cruise<br><span style="font-size:.55rem">25k–45kft</span></button>
+      <button class="alt-preset active" onclick="setAltPreset(0,99999,'All')">All<br><span style="font-size:.55rem">No filter</span></button>
+    </div>
+    <div class="altitude-display" id="altDisplay">All altitudes</div>
+    <div style="padding:0 8px">
+      <div style="margin-bottom:16px">
+        <label class="input-group" style="margin-bottom:6px"><span class="input-group label">Min Altitude (ft)</span></label>
+        <input type="range" id="altMin" min="0" max="45000" value="0" step="1000" oninput="updateAltFilter()">
+        <div class="range-labels"><span>0ft</span><span>15,000ft</span><span>30,000ft</span><span>45,000ft</span></div>
+      </div>
+      <div>
+        <label class="input-group" style="margin-bottom:6px"><span class="input-group label">Max Altitude (ft)</span></label>
+        <input type="range" id="altMax" min="0" max="99999" value="99999" step="1000" oninput="updateAltFilter()">
+        <div class="range-labels"><span>0ft</span><span>25,000ft</span><span>50,000ft</span><span>45k+ft</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Airport Board Drawer -->
+<div class="bottom-drawer" id="airportDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title" id="airportDrawerTitle">✈ Airport</span>
+    <button class="drawer-close" onclick="closeAllDrawers()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="airport-board-tabs">
+      <button class="ab-tab active" id="abTabArr" onclick="switchABTab('arr')">🛬 Arrivals</button>
+      <button class="ab-tab" id="abTabDep" onclick="switchABTab('dep')">🛫 Departures</button>
+    </div>
+    <div id="airportBoardContent"><div class="log-empty">Select an airport on the map</div></div>
+  </div>
+</div>
+
+<!-- Settings Drawer -->
+<div class="bottom-drawer" id="settingsDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">⚙️ Settings</span>
+    <button class="drawer-close" onclick="closeAllDrawers()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="radius-row" style="margin-bottom:16px">
+      <label>Search Radius <span id="radiusValDrawer">50 mi</span></label>
+      <input type="range" id="radiusDrawer" min="5" max="150" value="50" step="5" oninput="syncRadiusAll(this.value)">
+    </div>
+    <span class="section-label">Scan Interval</span>
+    <div class="interval-row">
+      <button class="interval-btn active" id="dint15" onclick="setInterval2(15)">15s</button>
+      <button class="interval-btn" id="dint30" onclick="setInterval2(30)">30s</button>
+      <button class="interval-btn" id="dint60" onclick="setInterval2(60)">60s</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 <div class="container">
   <header>
@@ -243,10 +559,14 @@ select option{background:var(--card);}
         <div style="font-family:'Space Mono',monospace;font-size:.58rem;color:#6b85b0;letter-spacing:2px;text-transform:uppercase;margin-top:3px;white-space:nowrap">Flight Alert Tracker</div>
       </div>
     </div>
-    <div class="status-bar">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">Not tracking</span>&nbsp;·&nbsp;
-      <span class="refresh-info" id="refreshInfo">—</span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+      <button onclick="showReleaseNotes()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(26,95,168,.15);border:1px solid rgba(26,95,168,.4);border-radius:8px;color:#60a5fa;font-family:Space Mono,monospace;font-size:.65rem;cursor:pointer;letter-spacing:1px;transition:all .2s" onmouseover="this.style.background='rgba(26,95,168,.25)'" onmouseout="this.style.background='rgba(26,95,168,.15)'">📋 Release Notes</button>
+      <a href="mailto:hello@spotrhq.com" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(26,95,168,.15);border:1px solid rgba(26,95,168,.4);border-radius:8px;color:#60a5fa;font-family:Space Mono,monospace;font-size:.65rem;text-decoration:none;letter-spacing:1px;transition:all .2s" onmouseover="this.style.background='rgba(26,95,168,.25)'" onmouseout="this.style.background='rgba(26,95,168,.15)'">✉ Contact</a>
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Not tracking</span>&nbsp;·&nbsp;
+        <span class="refresh-info" id="refreshInfo">—</span>
+      </div>
     </div>
   </header>
 
@@ -257,57 +577,101 @@ select option{background:var(--card);}
     <div class="stat-item"><span class="stat-label">🔔 Alerts:</span><span class="stat-value purple" id="statAlerts">0</span></div>
     <div class="stat-item"><span class="stat-label">❤️ Precious:</span><span class="stat-value pink" id="statPrecious">0</span></div>
     <div class="stat-item"><span class="stat-label">Session:</span><span class="stat-value" id="statTime">0m</span></div>
+    <div class="stat-item" style="margin-left:auto">
+      <span class="stat-label">⭐ Score:</span>
+      <span class="stat-value" style="color:#ffd700" id="spotterScore">0</span>
+    </div>
   </div>
 
+  <!-- Tooltip -->
+  <div id="sscTooltip" style="display:none;position:fixed;background:#0d1e3d;border:1px solid #1e3a6e;border-radius:8px;padding:8px 12px;font-size:.7rem;color:#e8edf8;max-width:200px;z-index:9999;pointer-events:none;line-height:1.4"></div>
+
+  <!-- Badge Toast -->
+  <div id="badgeToast" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1a3a6b,#163060);border:1px solid #ffd700;border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 8px 32px rgba(255,215,0,.2);animation:badgeIn .5s cubic-bezier(.175,.885,.32,1.275)">
+    <div id="badgeToastIcon" style="font-size:28px"></div>
+    <div><div id="badgeToastTitle" style="font-weight:800;color:#ffd700;font-size:.9rem"></div><div id="badgeToastDesc" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div></div>
+  </div>
+
+  <!-- Floating View Map pill (mobile) -->
+  <div id="viewMapPill" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-family:Syne,sans-serif;font-weight:700;font-size:.82rem;padding:10px 22px;border-radius:30px;box-shadow:0 4px 20px rgba(26,95,168,.5);z-index:8000;cursor:pointer;animation:pillBounce 2s infinite;white-space:nowrap" onclick="scrollToMap()">🗺 View Map ↓</div>
+
+
   <main>
-    <div id="onboardingBanner" class="onboarding-banner">
-      <div class="onboarding-icon">✈️</div>
-      <div class="onboarding-text">
-        <strong>Welcome to SpotrHQ!</strong>
-        <span>Enter your ZIP code below, then tap <b>Start Spotting</b> to see planes flying near you in real time.</span>
-      </div>
-      <button class="onboarding-dismiss" onclick="dismissOnboarding()" title="Dismiss">×</button>
-    </div>
+
     <div id="inactivityBanner" class="inactivity-banner">
       ⏱ Scanning has been running for 30 minutes. Still watching?
       <button onclick="resetInactivity()">Keep Scanning</button>
       <button onclick="stopScan()">Stop</button>
     </div>
 
+    <!-- Hero welcome panel -->
+    <div id="heroPanel" class="panel" style="margin-bottom:16px">
+      <div style="padding:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="font-size:2rem">✈️</div>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:#e8edf8">Welcome to SpotrHQ!</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:2px">See planes flying over you in real time</div>
+          </div>
+        </div>
+        <div class="input-group" style="margin-bottom:12px">
+          <label>Your ZIP Code</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="zipInputHero" placeholder="ZIP code or city name..." onkeydown="if(event.key==='Enter')lookupZip()" style="flex:1;font-size:1rem;padding:12px 14px">
+            <button class="action-btn" onclick="lookupZip()" style="padding:12px 16px;font-size:.85rem">📍 Set</button>
+          </div>
+          <div class="zip-result" id="zipResultHero"></div>
+        </div>
+        <!-- Mobile-only radius -->
+        <div id="mobileRadius" style="display:none;margin-bottom:12px">
+          <div class="radius-row">
+            <label>Search Radius <span id="radiusValMobile">50 mi</span></label>
+            <input type="range" id="radiusMobile" min="5" max="150" value="50" step="5" oninput="syncRadius(this.value)">
+          </div>
+        </div>
+        <button class="btn btn-primary pulse" id="scanBtnHero" onclick="startScan()" style="opacity:.45;cursor:not-allowed;font-size:1rem;padding:14px" disabled title="Set your location first">📍 Set Location to Start</button>
+      </div>
+    </div>
+
     <div class="grid">
       <!-- LEFT -->
       <div>
         <!-- Location -->
-        <div class="panel" style="margin-bottom:14px">
+        <div class="panel" style="margin-bottom:14px" id="desktopSettingsPanel">
           <div class="panel-header"><span class="panel-title">📍 Location & Settings</span></div>
           <div class="panel-body">
             <div class="input-group" style="margin-bottom:12px">
               <label>ZIP Code (US)</label>
               <div class="row">
-                <input type="text" id="zipInput" placeholder="e.g. 02101" maxlength="5" onkeydown="if(event.key==='Enter')lookupZip()">
+                <input type="text" id="zipInput" placeholder="ZIP code or city name..." onkeydown="if(event.key==='Enter')lookupZip()">
                 <button class="action-btn" onclick="lookupZip()">📍 Set</button>
               </div>
               <div class="zip-result" id="zipResult"></div>
             </div>
-            <button class="btn btn-primary pulse" id="scanBtn" onclick="startScan()" style="margin-bottom:14px">✈ Start Spotting</button>
+            <button class="btn btn-primary pulse" id="scanBtn" onclick="startScan()" style="margin-bottom:14px;opacity:.45;cursor:not-allowed" disabled title="Set your location first">📍 Set Location to Start</button>
             <div class="radius-row" style="margin-bottom:10px">
               <label>Search Radius <span id="radiusVal">50 mi</span></label>
               <input type="range" id="radius" min="5" max="150" value="50" step="5">
             </div>
-            <div class="input-group">
-              <label>Scan Interval</label>
-              <div class="interval-row">
-                <button class="interval-btn active" id="int15" onclick="setInterval2(15)">15s</button>
-                <button class="interval-btn" id="int30" onclick="setInterval2(30)">30s</button>
-                <button class="interval-btn" id="int60" onclick="setInterval2(60)">60s</button>
+            <input type="hidden" id="lat"><input type="hidden" id="lon">
+            <div style="margin-top:8px">
+              <button onclick="toggleAdvanced()" style="background:none;border:none;color:var(--muted);font-family:Space Mono,monospace;font-size:.62rem;cursor:pointer;letter-spacing:1px;padding:0;display:flex;align-items:center;gap:5px" id="advBtn">▶ Advanced Settings</button>
+              <div id="advancedSettings" style="display:none;margin-top:10px">
+                <div class="input-group">
+                  <label>Scan Interval</label>
+                  <div class="interval-row">
+                    <button class="interval-btn active" id="int15" onclick="setInterval2(15)">15s</button>
+                    <button class="interval-btn" id="int30" onclick="setInterval2(30)">30s</button>
+                    <button class="interval-btn" id="int60" onclick="setInterval2(60)">60s</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <input type="hidden" id="lat"><input type="hidden" id="lon">
           </div>
         </div>
 
         <!-- Alerts -->
-        <div class="panel">
+        <div class="panel" id="alertRulesPanel">
           <div class="panel-header"><span class="panel-title">🔔 Alert Rules</span></div>
           <div class="panel-body">
             <span class="section-label">⚡ Preset Alerts</span>
@@ -384,7 +748,6 @@ select option{background:var(--card);}
                   <option value="ASA">Alaska Airlines (AS)</option>
                   <option value="JBU">JetBlue (B6)</option>
                   <option value="FFT">Frontier (F9)</option>
-                  <option value="NKS">Spirit (NK)</option>
                   <option value="HAL">Hawaiian Airlines (HA)</option>
                   <option value="BAW">British Airways (BA)</option>
                   <option value="DLH">Lufthansa (LH)</option>
@@ -442,13 +805,56 @@ select option{background:var(--card);}
           </div>
           <canvas id="radarCanvas" style="display:none"></canvas>
           <div id="mapView" style="display:block"></div>
+
         </div>
+
+        <!-- Daily Challenge -->
+        <div id="challengeBanner" style="display:none;border:1px solid rgba(255,215,0,.3);border-radius:14px;padding:12px 16px;background:rgba(255,215,0,.05);margin-bottom:14px;flex-direction:row;align-items:center;gap:12px">
+          <span style="font-size:1.2rem">🎯</span>
+          <div style="flex:1">
+            <div style="font-size:.72rem;font-weight:700;color:#ffd700">Daily Challenge</div>
+            <div style="font-size:.7rem;color:var(--muted)" id="challengeText">Loading...</div>
+          </div>
+          <div id="challengeProgress" style="font-family:Space Mono,monospace;font-size:.7rem;color:#ffd700;white-space:nowrap"></div>
+          <div id="challengeDone" style="display:none;font-size:1.2rem">✅</div>
+        </div>
+
+        <!-- Sky Stats Panel -->
+        <div id="skyStatsPanel" style="display:none;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
+            <div class="sky-stat-card">
+              <div class="ssc-title">🏆 Highest Altitude <span class="ssc-info" data-tip="The highest flying aircraft currently in your scan area">ⓘ</span></div>
+              <div class="ssc-value" id="ssc-alt-val">—</div>
+              <div class="ssc-sub" id="ssc-alt-sub"></div>
+            </div>
+            <div class="sky-stat-card">
+              <div class="ssc-title">⚡ Fastest Plane <span class="ssc-info" data-tip="The quickest aircraft spotted this session by ground speed">ⓘ</span></div>
+              <div class="ssc-value" id="ssc-spd-val">—</div>
+              <div class="ssc-sub" id="ssc-spd-sub"></div>
+            </div>
+            <div class="sky-stat-card">
+              <div class="ssc-title">✈️ Top Airline <span class="ssc-info" data-tip="The airline with the most flights in your scan radius">ⓘ</span></div>
+              <div class="ssc-value" id="ssc-air-val">—</div>
+              <div class="ssc-sub" id="ssc-air-sub"></div>
+            </div>
+            <div class="sky-stat-card">
+              <div class="ssc-title">📏 High/Low <span class="ssc-info" data-tip="Highest vs lowest altitude — proxy for long-haul vs regional">ⓘ</span></div>
+              <div class="ssc-value" id="ssc-lng-val">—</div>
+              <div class="ssc-sub" id="ssc-lng-sub"></div>
+            </div>
+
+          </div>
+        </div>
+        <!-- Hidden stat elements for JS compatibility -->
+        <span id="ssc-tot-val" style="display:none">0</span>
+        <span id="ssc-tot-sub" style="display:none"></span>
 
         <div class="panel flights-panel">
           <div class="panel-header" style="padding:0">
             <div class="tabs">
               <button class="tab active" onclick="switchTab('flights',this)">Nearby Flights</button>
               <button class="tab" onclick="switchTab('alerts',this)">Alert Log</button>
+              <button class="tab" onclick="switchTab('badges',this)">🏅 Badges</button>
             </div>
           </div>
           <div id="tab-flights" class="tab-content active">
@@ -467,6 +873,9 @@ select option{background:var(--card);}
           </div>
           <div id="tab-alerts" class="tab-content">
             <div class="alert-log" id="alertLog"><div class="log-empty">No alerts triggered yet.</div></div>
+          </div>
+          <div id="tab-badges" class="tab-content">
+            <div class="badge-grid" id="badgeGrid"></div>
           </div>
         </div>
       </div>
@@ -539,17 +948,18 @@ let stats={total:new Set(),bf:0,alerts:0,precious:0};
 let flightHistory={};// store last positions for trails
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-document.getElementById('radius').addEventListener('input',e=>{
-  const mi=parseInt(e.target.value);
-  document.getElementById('radiusVal').textContent=mi+' mi';
-  if(radiusCircle&&userLat) radiusCircle.setRadius(mi/MI_PER_KM*1000);
-});
+document.getElementById('radius').addEventListener('input',e=>syncRadius(e.target.value));
 document.getElementById('typeCheckboxList').addEventListener('change',updateTypeCount);
 function updateTypeCount(){
   const n=document.querySelectorAll('#typeCheckboxList input:checked').length;
   document.getElementById('typeCount').textContent=n>0?n+' selected':'';
 }
 document.getElementById('cargoDate').value=new Date().toISOString().split('T')[0];
+loadScore();
+renderBadges();
+initDailyChallenge();
+recordStreak();
+setTimeout(()=>document.getElementById('zipInput').focus(),500);
 
 // Page visibility API — pause when hidden
 document.addEventListener('visibilitychange',()=>{
@@ -601,22 +1011,45 @@ initMap();
 
 // ─── ZIP ──────────────────────────────────────────────────────────────────────
 async function lookupZip(){
-  const zip=document.getElementById('zipInput').value.trim();
-  const btn=document.querySelector('[onclick="lookupZip()"]'),el=document.getElementById('zipResult');
-  if(!/^\d{5}$/.test(zip)){el.textContent='⚠ Enter a valid 5-digit ZIP.';el.className='zip-result error';return;}
-  btn.textContent='⏳...';btn.disabled=true;
+  const desktopInput=document.getElementById('zipInput');
+  const heroInput=document.getElementById('zipInputHero');
+  const activeInput=heroInput&&heroInput.offsetParent?heroInput:desktopInput;
+  const query=activeInput?activeInput.value.trim():'';
+  const btns=document.querySelectorAll('[onclick="lookupZip()"]');
+  const el=document.getElementById('zipResult');
+  if(!query){el.textContent='⚠ Enter a ZIP code or city name.';el.className='zip-result error';return;}
+  btns.forEach(b=>{b.textContent='⏳...';b.disabled=true;});
+  el.textContent='';el.className='zip-result';
+  const isZip=/^\d{5}$/.test(query);
   try{
-    const res=await fetch('https://api.zippopotam.us/us/'+zip);
-    if(!res.ok) throw new Error();
-    const data=await res.json(),p=data.places[0];
-    userLat=parseFloat(p.latitude);userLon=parseFloat(p.longitude);
-    userCity=p['place name']+', '+p['state abbreviation'];
-    document.getElementById('lat').value=userLat;document.getElementById('lon').value=userLon;
+    if(isZip){
+      const res=await fetch('https://api.zippopotam.us/us/'+query);
+      if(!res.ok) throw new Error('ZIP not found');
+      const data=await res.json(),p=data.places[0];
+      userLat=parseFloat(p.latitude);userLon=parseFloat(p.longitude);
+      userCity=p['place name']+', '+p['state abbreviation'];
+    } else {
+      const res=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(query)+'&format=json&limit=1',{headers:{'Accept-Language':'en','User-Agent':'SpotrHQ/1.0'}});
+      if(!res.ok) throw new Error('City not found');
+      const data=await res.json();
+      if(!data||!data.length) throw new Error('Location not found');
+      userLat=parseFloat(data[0].lat);userLon=parseFloat(data[0].lon);
+      const parts=data[0].display_name.split(',');
+      userCity=parts.slice(0,2).join(',').trim();
+    }
+    document.getElementById('lat').value=userLat;
+    document.getElementById('lon').value=userLon;
     el.textContent='✅ '+userCity;el.className='zip-result success';
+  const elH=document.getElementById('zipResultHero');if(elH){elH.textContent='✅ '+userCity;elH.className='zip-result success';}
     showToast('📍','Location Set',userCity);
     if(leafletMap) addUserMapMarker();
-  }catch{el.textContent='⚠ ZIP not found.';el.className='zip-result error';}
-  btn.textContent='📍 Set';btn.disabled=false;
+    enableScanBtn();
+  }catch(e){
+    el.textContent='⚠ Location not found. Try a city name or ZIP code.';
+  const elHe=document.getElementById('zipResultHero');if(elHe){elHe.textContent='⚠ Not found.';elHe.className='zip-result error';}
+    el.className='zip-result error';
+  }
+  btns.forEach(b=>{b.textContent='📍 Set';b.disabled=false;});
 }
 
 // ─── View ─────────────────────────────────────────────────────────────────────
@@ -668,25 +1101,15 @@ const MAJOR_AIRPORTS=[
   {code:'DTW',name:'Detroit Metro',lat:42.2162,lon:-83.3554},{code:'PHL',name:'Philadelphia Intl',lat:39.8744,lon:-75.2424}
 ];
 
-function addAirportMarkers(){
-  if(!leafletMap||!userLat) return;
-  airportMarkers.forEach(m=>m.remove());airportMarkers=[];
-  const radiusMi=parseInt(document.getElementById('radius').value)||50;
-  MAJOR_AIRPORTS.forEach(ap=>{
-    const d=haversine(userLat,userLon,ap.lat,ap.lon)*MI_PER_KM;
-    if(d>radiusMi*1.5) return;
-    const icon=L.divIcon({className:'',html:'<div style="display:flex;align-items:center;gap:3px"><div style="width:8px;height:8px;background:#aaff00;border-radius:50%;border:1px solid #0a0d14;flex-shrink:0"></div><span class="airport-label">'+ap.code+'</span></div>',iconSize:[60,16],iconAnchor:[4,8]});
-    const m=L.marker([ap.lat,ap.lon],{icon,zIndexOffset:-100}).addTo(leafletMap).bindPopup('<b style="color:#aaff00">✈ '+ap.code+'</b><br><span style="color:#5a647d">'+ap.name+'</span>',{className:'plane-popup'});
-    airportMarkers.push(m);
-  });
-}
+// addAirportMarkers defined below
+
 
 function updateMapMarkers(){
   if(!leafletMap) return;
   mapMarkers.forEach(m=>m.remove());mapMarkers=[];
   flightPaths.forEach(p=>p.remove());flightPaths=[];
 
-  flights.forEach(f=>{
+  flights.filter(f=>passesAltFilter(f)).forEach(f=>{
     if(!f.latitude||!f.longitude) return;
     const bf=isBigFella(f),pc=isPreciousCargo(f),cu=matchesCustomAlert(f);
     const color=pc?'#ff69b4':bf?'#ffa040':cu?'#c084fc':'#00e5ff';
@@ -725,7 +1148,9 @@ function updateMapMarkers(){
       (pc?'<div style="color:#ff69b4;margin-top:6px;font-weight:bold">❤️ Precious Cargo!</div>':'')+
       (bf?'<div style="color:#ffa040;margin-top:6px;font-weight:bold">🦧 Big Fella!</div>':'');
 
-    mapMarkers.push(L.marker([f.latitude,f.longitude],{icon}).addTo(leafletMap).bindPopup(popup,{className:'plane-popup'}));
+    const marker=L.marker([f.latitude,f.longitude],{icon}).addTo(leafletMap);
+    marker.on('click',()=>showEnhancedPopup(f,marker));
+    mapMarkers.push(marker);
   });
 }
 
@@ -848,8 +1273,10 @@ async function startScan(){
   if(scanning){stopScan();return;}
   scanning=true;
   document.getElementById('scanBtn').textContent='⏹ Stop Spotting';
+  document.getElementById('skyStatsPanel').style.display='block';
   document.getElementById('scanBtn').classList.remove('pulse');
   dismissOnboarding();
+  showMapPill();
   setStatus('live','Scanning…');
   alertedCallsigns.clear();bigFellaEmailedCallsigns.clear();
   stats={total:new Set(),bf:0,alerts:0,precious:0};updateStats();
@@ -864,8 +1291,7 @@ function stopScan(){
   scanning=false;clearInterval(scanInterval);scanInterval=null;
   cancelAnimationFrame(animFrame);clearInterval(sessionTimer);clearTimeout(inactivityTimer);
   document.getElementById('inactivityBanner').style.display='none';
-  document.getElementById('scanBtn').textContent='✈ Start Spotting';
-  document.getElementById('scanBtn').classList.add('pulse');
+  ['scanBtn','scanBtnHero'].forEach(id=>{const b=document.getElementById(id);if(b){b.textContent='✈ Start Spotting';b.classList.add('pulse');}});
   setStatus('','Stopped');drawRadar();
 }
 async function fetchFlights(){
@@ -926,7 +1352,10 @@ function useDemoData(lat,lon,radiusKm){
   flights.forEach(f=>stats.total.add(f.icao24));updateStats();
   setStatus('live','Demo · '+flights.length+' aircraft');
   document.getElementById('flightCount').textContent=flights.length+' flights (demo)';
+  document.getElementById('skyStatsPanel').style.display='block';
+  flights.forEach(f=>addScore(f));
   checkAlerts();renderFlightList();drawRadar();if(currentView==='map') updateMapMarkers();
+  updateSkyStats();checkBadges();checkDailyChallenge();
 }
 
 // ─── Alert Checking ───────────────────────────────────────────────────────────
@@ -979,10 +1408,10 @@ function renderAlertLog(){
 // ─── Flight List ──────────────────────────────────────────────────────────────
 function renderFlightList(){
   const c=document.getElementById('flightsList'),filter=document.getElementById('filterType').value;
-  let list=flights;
-  if(filter==='alerted') list=flights.filter(f=>matchesCustomAlert(f));
-  if(filter==='bigfella') list=flights.filter(f=>isBigFella(f));
-  if(filter==='precious') list=flights.filter(f=>isPreciousCargo(f));
+  let list=flights.filter(f=>passesAltFilter(f));
+  if(filter==='alerted') list=list.filter(f=>matchesCustomAlert(f));
+  if(filter==='bigfella') list=list.filter(f=>isBigFella(f));
+  if(filter==='precious') list=list.filter(f=>isPreciousCargo(f));
   if(!list.length){c.innerHTML='<div class="empty-state"><div>🔍</div><p>'+(flights.length===0?'No flights found in range.':'No matching flights.')+'</p></div>';return;}
   c.innerHTML=list.slice(0,40).map(f=>{
     const bf=isBigFella(f),pc=isPreciousCargo(f),cu=matchesCustomAlert(f);
@@ -1082,9 +1511,748 @@ function showToast(icon,title,body,isBF=false,isOrange=false,isPink=false){
   c.appendChild(t);setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},5000);
 }
 function dismissOnboarding(){
-  document.getElementById('onboardingBanner').style.display='none';
+  // heroPanel serves as onboarding on mobile
+  const ob=document.getElementById('heroPanel');
+  if(ob&&window.innerWidth<=820) ob.style.display='none';
 }
+
+// ─── Advanced Settings Toggle ─────────────────────────────────────────────────
+
+// ─── Mobile scroll to map ─────────────────────────────────────────────────────
+function scrollToMap(){
+  const mapEl=document.querySelector('.map-panel');
+  if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('viewMapPill').style.display='none';
+}
+
+function showMapPill(){
+  if(window.innerWidth<=820){
+    document.getElementById('viewMapPill').style.display='block';
+    setTimeout(()=>{
+      document.getElementById('viewMapPill').style.display='none';
+    },8000);
+  }
+}
+
+// Hide pill when map is in view
+const mapObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) document.getElementById('viewMapPill').style.display='none';
+  });
+},{threshold:0.3});
+document.addEventListener('DOMContentLoaded',()=>{
+  const mapEl=document.querySelector('.map-panel');
+  if(mapEl) mapObserver.observe(mapEl);
+});
+
+function syncRadius(val){
+  document.getElementById('radius').value=val;
+  document.getElementById('radiusMobile').value=val;
+  document.getElementById('radiusVal').textContent=val+' mi';
+  document.getElementById('radiusValMobile').textContent=val+' mi';
+  if(radiusCircle&&userLat) radiusCircle.setRadius(val/0.621371*1000);
+}
+function toggleAdvanced(){
+  const el=document.getElementById('advancedSettings');
+  const btn=document.getElementById('advBtn');
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  btn.textContent=(open?'▶':'▼')+' Advanced Settings';
+}
+
+// ─── ZIP enables scan button ──────────────────────────────────────────────────
+function enableScanBtn(){
+  ['scanBtn','scanBtnHero'].forEach(id=>{
+    const btn=document.getElementById(id);
+    if(!btn) return;
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+    btn.textContent='✈ Start Spotting';
+    btn.classList.add('pulse');
+  });
+}
+
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+document.addEventListener('mouseover',e=>{
+  if(e.target.classList.contains('ssc-info')){
+    const tip=document.getElementById('sscTooltip');
+    tip.textContent=e.target.dataset.tip;
+    tip.style.display='block';
+  }
+});
+document.addEventListener('mousemove',e=>{
+  const tip=document.getElementById('sscTooltip');
+  if(tip.style.display==='block'){
+    tip.style.left=(e.clientX+12)+'px';
+    tip.style.top=(e.clientY+12)+'px';
+  }
+});
+document.addEventListener('mouseout',e=>{
+  if(e.target.classList.contains('ssc-info')){
+    document.getElementById('sscTooltip').style.display='none';
+  }
+});
+// Mobile tap toggle
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('ssc-info')){
+    const tip=document.getElementById('sscTooltip');
+    if(tip.style.display==='block'){tip.style.display='none';return;}
+    tip.textContent=e.target.dataset.tip;
+    tip.style.display='block';
+    const r=e.target.getBoundingClientRect();
+    tip.style.left=r.left+'px';
+    tip.style.top=(r.bottom+6)+'px';
+    setTimeout(()=>tip.style.display='none',3000);
+  }
+});
+
+// ─── Sky Stats ────────────────────────────────────────────────────────────────
+function updateSkyStats(){
+  if(!flights.length) return;
+  document.getElementById('skyStatsPanel').style.display='block';
+
+  // Highest altitude
+  const highest=flights.filter(f=>f.baro_altitude).sort((a,b)=>b.baro_altitude-a.baro_altitude)[0];
+  if(highest){
+    document.getElementById('ssc-alt-val').textContent=ftStr(highest.baro_altitude);
+    document.getElementById('ssc-alt-sub').textContent=highest.callsign+(getAircraftName(highest.type)?' · '+getAircraftName(highest.type):'');
+  }
+
+  // Fastest
+  const fastest=flights.filter(f=>f.velocity).sort((a,b)=>b.velocity-a.velocity)[0];
+  if(fastest){
+    document.getElementById('ssc-spd-val').textContent=ktToMph(fastest.velocity);
+    document.getElementById('ssc-spd-sub').textContent=fastest.callsign+(getAircraftName(fastest.type)?' · '+getAircraftName(fastest.type):'');
+  }
+
+  // Top airline
+  const airlineCounts={};
+  flights.forEach(f=>{
+    const al=getAirlineName(f.callsign);
+    if(al) airlineCounts[al]=(airlineCounts[al]||0)+1;
+  });
+  const topAirline=Object.entries(airlineCounts).sort((a,b)=>b[1]-a[1])[0];
+  if(topAirline){
+    document.getElementById('ssc-air-val').textContent=topAirline[0];
+    const runner=Object.entries(airlineCounts).sort((a,b)=>b[1]-a[1])[1];
+    document.getElementById('ssc-air-sub').textContent=topAirline[1]+' flights overhead'+(runner?' · 2nd: '+runner[0]+' ('+runner[1]+')':'');
+  }
+
+  // Highest/Lowest altitude
+  const lowest=flights.filter(f=>f.baro_altitude&&f.baro_altitude>100).sort((a,b)=>a.baro_altitude-b.baro_altitude)[0];
+  if(highest&&lowest&&highest.icao24!==lowest.icao24){
+    document.getElementById('ssc-lng-val').textContent='↑ '+ftStr(highest.baro_altitude);
+    document.getElementById('ssc-lng-sub').textContent='↓ Lowest: '+ftStr(lowest.baro_altitude)+' ('+lowest.callsign+')';
+  }
+
+  // Session total
+  document.getElementById('ssc-tot-val').textContent=stats.total.size;
+  const mins=sessionStart?Math.floor((Date.now()-sessionStart)/60000):0;
+  const rate=mins>0?(stats.total.size/mins).toFixed(1):0;
+  document.getElementById('ssc-tot-sub').textContent=rate+' aircraft/min · '+mins+'m session';
+}
+
+// ─── Spotter Score ────────────────────────────────────────────────────────────
+const TYPE_POINTS={
+  A380:50,B744:40,B748:40,B77W:30,B772:30,B788:25,B789:25,B78X:25,
+  A359:25,A35K:30,A332:20,A333:20,B752:15,B763:15,A321:10,A320:10,
+  A319:10,B738:10,B737:10,E190:12,E170:12,CRJ9:8,CRJ2:8,
+  C172:15,PC12:20,TBM9:20,C17:60,C5:70,B52:100,
+  H60:35,DEFAULT:5
+};
+let spotterScore=0;
+let scoredIcaos=new Set();
+
+function addScore(f){
+  if(scoredIcaos.has(f.icao24)) return;
+  scoredIcaos.add(f.icao24);
+  const t=(f.type||'').toUpperCase().replace(/[-\s]/g,'');
+  let pts=TYPE_POINTS.DEFAULT;
+  for(const [code,p] of Object.entries(TYPE_POINTS)){
+    if(t.includes(code)){pts=p;break;}
+  }
+  spotterScore+=pts;
+  // Save to localStorage
+  const saved=JSON.parse(localStorage.getItem('spotrhq_score')||'{"total":0,"history":[]}');
+  saved.total+=pts;
+  saved.history.push({callsign:f.callsign,type:f.type,pts,time:new Date().toISOString()});
+  if(saved.history.length>100) saved.history=saved.history.slice(-100);
+  localStorage.setItem('spotrhq_score',JSON.stringify(saved));
+  document.getElementById('spotterScore').textContent=saved.total.toLocaleString();
+  // Score popup
+  showScorePopup('+'+pts, f.callsign);
+}
+
+function loadScore(){
+  const saved=JSON.parse(localStorage.getItem('spotrhq_score')||'{"total":0}');
+  document.getElementById('spotterScore').textContent=(saved.total||0).toLocaleString();
+}
+
+function showScorePopup(pts, callsign){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;bottom:70px;right:20px;background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.4);border-radius:8px;padding:6px 12px;font-family:Space Mono,monospace;font-size:.75rem;color:#ffd700;z-index:9998;animation:toastIn .3s ease;pointer-events:none';
+  el.textContent=pts+' pts · '+callsign;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},2000);
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+const BADGES=[
+  {id:'first_flight',icon:'🛫',name:'First Spotted',desc:'Spot your first flight',check:()=>stats.total.size>=1},
+  {id:'big_fella_1',icon:'🦧',name:'Big Fella!',desc:'Spot your first Big Fella',check:()=>stats.bf>=1},
+  {id:'big_fella_5',icon:'🦧🦧',name:'Gorilla Gang',desc:'Spot 5 Big Fellas',check:()=>stats.bf>=5},
+  {id:'night_owl',icon:'🦉',name:'Night Owl',desc:'Spot a flight after midnight',check:()=>new Date().getHours()>=0&&new Date().getHours()<5&&stats.total.size>0},
+  {id:'century',icon:'💯',name:'Century',desc:'Spot 100 flights in one session',check:()=>stats.total.size>=100},
+  {id:'speed_demon',icon:'⚡',name:'Speed Demon',desc:'Spot a plane going over 600mph',check:()=>flights.some(f=>f.velocity&&f.velocity*2.237>600)},
+  {id:'high_flyer',icon:'🏔',name:'High Flyer',desc:'Spot a plane above 40,000ft',check:()=>flights.some(f=>f.baro_altitude&&f.baro_altitude*3.281>40000)},
+  {id:'international',icon:'🌍',name:'International',desc:'Spot 5 different countries overhead',check:()=>new Set(flights.map(f=>f.origin_country).filter(Boolean)).size>=5},
+  {id:'military',icon:'🎖',name:'Eyes on Target',desc:'Spot a military aircraft',check:()=>flights.some(f=>['C17','C5','B52','H60','E3','KC135'].some(t=>(f.type||'').toUpperCase().includes(t)))},
+  {id:'precious_1',icon:'❤️',name:'Precious Moment',desc:'Track your first Precious Cargo flight',check:()=>preciousCargos.length>=1},
+  {id:'streak_3',icon:'🔥',name:'On Fire',desc:'Spot flights 3 days in a row',check:()=>checkStreak(3)},
+  {id:'top_gun',icon:'🎯',name:'Top Gun',desc:'Spot a plane going over 700mph',check:()=>flights.some(f=>f.velocity&&f.velocity*2.237>700)},
+];
+
+let earnedBadges=new Set(JSON.parse(localStorage.getItem('spotrhq_badges')||'[]'));
+
+function checkStreak(days){
+  const history=JSON.parse(localStorage.getItem('spotrhq_streak')||'[]');
+  if(!history.length) return false;
+  const today=new Date().toDateString();
+  const dates=new Set(history.map(d=>new Date(d).toDateString()));
+  let streak=0;
+  for(let i=0;i<days;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    if(dates.has(d.toDateString())) streak++;
+    else break;
+  }
+  return streak>=days;
+}
+
+function recordStreak(){
+  const history=JSON.parse(localStorage.getItem('spotrhq_streak')||'[]');
+  history.push(new Date().toISOString());
+  // Keep last 30 days
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
+  const filtered=history.filter(d=>new Date(d)>cutoff);
+  localStorage.setItem('spotrhq_streak',JSON.stringify(filtered));
+}
+
+function checkBadges(){
+  BADGES.forEach(b=>{
+    if(earnedBadges.has(b.id)) return;
+    if(b.check()){
+      earnedBadges.add(b.id);
+      localStorage.setItem('spotrhq_badges',JSON.stringify([...earnedBadges]));
+      showBadgeToast(b);
+    }
+  });
+  renderBadges();
+}
+
+function renderBadges(){
+  const grid=document.getElementById('badgeGrid');
+  grid.innerHTML=BADGES.map(b=>`
+    <div class="badge-item ${earnedBadges.has(b.id)?'earned':''}" title="${b.desc}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`).join('');
+}
+
+function showBadgeToast(badge){
+  const toast=document.getElementById('badgeToast');
+  document.getElementById('badgeToastIcon').textContent=badge.icon;
+  document.getElementById('badgeToastTitle').textContent='Badge Unlocked: '+badge.name;
+  document.getElementById('badgeToastDesc').textContent=badge.desc;
+  toast.style.display='flex';
+  showToast('🏅','Badge Unlocked!',badge.name+' — '+badge.desc);
+  setTimeout(()=>toast.style.display='none',4000);
+}
+
+// ─── Daily Challenge ──────────────────────────────────────────────────────────
+const CHALLENGES=[
+  {text:'Spot a Boeing 747',check:()=>flights.some(f=>(f.type||'').toUpperCase().includes('B74'))},
+  {text:'Spot an Airbus A380',check:()=>flights.some(f=>(f.type||'').toUpperCase().includes('A380'))},
+  {text:'Find a flight above 40,000ft',check:()=>flights.some(f=>f.baro_altitude&&f.baro_altitude*3.281>40000)},
+  {text:'Spot 10 flights in one session',check:()=>stats.total.size>=10},
+  {text:'Find a military aircraft',check:()=>flights.some(f=>['C17','C5','H60','B52'].some(t=>(f.type||'').toUpperCase().includes(t)))},
+  {text:'Spot a Boeing 787 Dreamliner',check:()=>flights.some(f=>(f.type||'').toUpperCase().includes('B78'))},
+  {text:'Find 3 different airlines overhead at once',check:()=>new Set(flights.map(f=>getAirlineName(f.callsign)).filter(Boolean)).size>=3},
+  {text:'Spot a plane going faster than 550mph',check:()=>flights.some(f=>f.velocity&&f.velocity*2.237>550)},
+  {text:'Find a flight from another continent',check:()=>flights.some(f=>['United Kingdom','France','Germany','Japan','Australia','China','Brazil'].includes(f.origin_country))},
+  {text:'Spot 5 Big Fellas in one session',check:()=>stats.bf>=5},
+];
+
+function initDailyChallenge(){
+  const today=new Date().toDateString();
+  const saved=JSON.parse(localStorage.getItem('spotrhq_challenge')||'{}');
+  // Pick challenge based on day of year for consistency
+  const dayIdx=Math.abs(Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/(1000*60*60*24)))%CHALLENGES.length;
+  const challenge=CHALLENGES[dayIdx];
+  const done=saved.date===today&&saved.done;
+
+  const banner=document.getElementById('challengeBanner');
+  banner.classList.add('visible');
+  document.getElementById('challengeText').textContent=challenge.text;
+  document.getElementById('challengeProgress').textContent=done?'Completed!':'In progress...';
+  if(done) document.getElementById('challengeDone').style.display='block';
+
+  // Store current challenge
+  if(saved.date!==today){
+    localStorage.setItem('spotrhq_challenge',JSON.stringify({date:today,idx:dayIdx,done:false}));
+  }
+
+  return {challenge,done,dayIdx};
+}
+
+function checkDailyChallenge(){
+  const today=new Date().toDateString();
+  const saved=JSON.parse(localStorage.getItem('spotrhq_challenge')||'{}');
+  if(saved.done) return;
+  const dayIdx=saved.idx||0;
+  const challenge=CHALLENGES[dayIdx];
+  if(challenge&&challenge.check()){
+    saved.done=true;saved.date=today;
+    localStorage.setItem('spotrhq_challenge',JSON.stringify(saved));
+    document.getElementById('challengeProgress').textContent='Completed! +100 pts';
+    document.getElementById('challengeDone').style.display='block';
+    // Bonus score
+    const sc=JSON.parse(localStorage.getItem('spotrhq_score')||'{"total":0,"history":[]}');
+    sc.total+=100;
+    localStorage.setItem('spotrhq_score',JSON.stringify(sc));
+    document.getElementById('spotterScore').textContent=sc.total.toLocaleString();
+    showToast('🎯','Daily Challenge Complete!','You earned 100 bonus points!');
+  }
+}
+
+// ─── Planespotters photo ──────────────────────────────────────────────────────
+async function fetchPlanePhoto(icao24){
+  try{
+    const res=await fetch('https://api.planespotters.net/pub/photos/hex/'+icao24);
+    if(!res.ok) return null;
+    const data=await res.json();
+    if(data.photos&&data.photos.length>0){
+      return {
+        url: data.photos[0].thumbnail_large?.src || data.photos[0].thumbnail?.src,
+        photographer: data.photos[0].photographer,
+        link: data.photos[0].link
+      };
+    }
+  }catch(e){console.error('Planespotters error:',e);}
+  return null;
+}
+
+// ─── AviationStack route lookup ───────────────────────────────────────────────
+async function fetchRoute(callsign){
+  try{
+    const res=await fetch('/.netlify/functions/route?callsign='+encodeURIComponent(callsign.trim()));
+    if(!res.ok) return null;
+    const data=await res.json();
+    return data;
+  }catch(e){return null;}
+}
+
+// ─── Enhanced map popup with photo + route ────────────────────────────────────
+async function showEnhancedPopup(f, marker){
+  const bf=isBigFella(f),pc=isPreciousCargo(f);
+  const airline=getAirlineName(f.callsign);
+  const acName=getAircraftName(f.type);
+
+  // Base popup
+  let popupContent=
+    '<div class="popup-callsign">'+f.callsign+'</div>'+
+    (airline?'<div class="popup-airline">'+airline+'</div>':'')+
+    '<div class="popup-row">Aircraft: <span>'+(acName||f.type||'—')+'</span></div>'+
+    '<div class="popup-row">Altitude: <span>'+ftStr(f.baro_altitude)+'</span></div>'+
+    '<div class="popup-row">Speed: <span>'+ktToMph(f.velocity)+'</span></div>'+
+    '<div class="popup-row">Distance: <span>'+miStr(f.dist)+'</span></div>'+
+    '<div id="popup-route-'+f.icao24+'" class="popup-row" style="color:#aaff00">🔄 Loading route...</div>'+
+    '<div id="popup-photo-'+f.icao24+'" style="margin-top:8px;text-align:center">📸 Loading photo...</div>'+
+    (bf?'<div style="color:#ffa040;margin-top:6px;font-weight:bold">🦧 Big Fella!</div>':'')+
+    (pc?'<div style="color:#ff69b4;margin-top:6px;font-weight:bold">❤️ Precious Cargo!</div>':'');
+
+  marker.bindPopup(popupContent,{className:'plane-popup',maxWidth:260}).openPopup();
+
+  // Fetch route and photo in parallel
+  const [routeData, photoData] = await Promise.all([
+    fetchRoute(f.callsign),
+    fetchPlanePhoto(f.icao24)
+  ]);
+
+  // Update route
+  const routeEl=document.getElementById('popup-route-'+f.icao24);
+  if(routeEl){
+    if(routeData&&routeData.dep&&routeData.arr){
+      routeEl.innerHTML='Route: <span style="color:#aaff00">'+routeData.dep+' → '+routeData.arr+'</span>';
+      // Update flight in list too
+      f.dep=routeData.dep;f.arr=routeData.arr;
+      renderFlightList();
+    } else {
+      routeEl.textContent='Route: —';
+    }
+  }
+
+  // Update photo
+  const photoEl=document.getElementById('popup-photo-'+f.icao24);
+  if(photoEl){
+    if(photoData&&photoData.url){
+      photoEl.innerHTML='<a href="'+photoData.link+'" target="_blank"><img src="'+photoData.url+'" style="width:100%;border-radius:6px;margin-top:4px" alt="'+f.callsign+'"></a><div style="font-size:.58rem;color:#5a647d;margin-top:3px">📸 '+photoData.photographer+'</div>';
+    } else {
+      photoEl.textContent='';
+    }
+  }
+}
+
+
+// ─── Release Notes ────────────────────────────────────────────────────────────
+function showReleaseNotes(){document.getElementById('rnOverlay').classList.add('open');}
+function closeReleaseNotes(){document.getElementById('rnOverlay').classList.remove('open');}
+
+// ─── Drawers ──────────────────────────────────────────────────────────────────
+let currentDrawer=null;
+function closeAllDrawers(){
+  document.querySelectorAll('.bottom-drawer').forEach(d=>d.classList.remove('open'));
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.querySelectorAll('.mt-btn').forEach(b=>b.classList.remove('active'));
+  currentDrawer=null;
+}
+
+function toggleBigFellaDrawer(){
+  toggleBigFella();
+  const btn=document.getElementById('mtBigFella');
+  btn.classList.toggle('active',bigFellaActive);
+  btn.querySelector('.mt-btn-label').textContent=bigFellaActive?'ON':'Big Fella';
+}
+
+function populateAlertsDrawer(){
+  const body=document.getElementById('alertsDrawerBody');
+  body.innerHTML=`
+    <div style="background:rgba(26,95,168,.1);border:1px solid rgba(26,95,168,.3);border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.85rem;font-weight:700;color:#60a5fa;margin-bottom:6px">Custom flight alerts</div>
+      <div style="font-size:.75rem;color:var(--muted);line-height:1.6">Get notified when a specific airline, callsign, or low-flying aircraft enters your scan area.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <div class="input-group">
+        <label>Airline</label>
+        <select id="drawerAlertAirline" style="background:#112244;border-color:#1e3a6e;color:#e8edf8">
+          <option value="">— Any Airline —</option>
+          <option value="AAL">American Airlines (AA)</option>
+          <option value="UAL">United Airlines (UA)</option>
+          <option value="DAL">Delta Air Lines (DL)</option>
+          <option value="SWA">Southwest Airlines (WN)</option>
+          <option value="ASA">Alaska Airlines (AS)</option>
+          <option value="JBU">JetBlue (B6)</option>
+          <option value="FFT">Frontier (F9)</option>
+          <option value="HAL">Hawaiian Airlines (HA)</option>
+          <option value="BAW">British Airways (BA)</option>
+          <option value="DLH">Lufthansa (LH)</option>
+          <option value="AFR">Air France (AF)</option>
+          <option value="UAE">Emirates (EK)</option>
+          <option value="QTR">Qatar Airways (QR)</option>
+          <option value="SIA">Singapore Airlines (SQ)</option>
+          <option value="QFA">Qantas (QF)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Callsign contains (optional)</label>
+        <input type="text" id="drawerCallsign" placeholder="e.g. UAL, BA..." style="background:#112244;border-color:#1e3a6e;color:#e8edf8">
+      </div>
+      <div class="input-group">
+        <label>Max altitude ft (optional)</label>
+        <input type="number" id="drawerAlt" placeholder="e.g. 5000 for low-flying" style="background:#112244;border-color:#1e3a6e;color:#e8edf8">
+      </div>
+      <button onclick="addAlertFromDrawer()" style="padding:12px;background:#1a5fa8;border:none;border-radius:10px;color:#fff;font-family:Syne,sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;width:100%">+ Add Alert Rule</button>
+    </div>
+    <div id="drawerChips" class="alert-chips"></div>`;
+  syncDrawerChips();
+  const badge=document.getElementById('mtAlertsBadge');
+  if(badge) badge.style.display=customAlerts.length>0?'block':'none';
+}
+
+function addAlertFromDrawer(){
+  const airline=document.getElementById('drawerAlertAirline').value;
+  const callsign=document.getElementById('drawerCallsign').value.toUpperCase().trim();
+  const alt=document.getElementById('drawerAlt').value;
+  if(!airline&&!callsign){showToast('⚠️','Missing Rule','Enter an airline or callsign.');return;}
+  customAlerts.push({types:[],airline,callsign,alt:alt?parseInt(alt):null});
+  renderAlertChips();
+  syncDrawerChips();
+  document.getElementById('drawerAlertAirline').value='';
+  document.getElementById('drawerCallsign').value='';
+  document.getElementById('drawerAlt').value='';
+  const badge=document.getElementById('mtAlertsBadge');
+  if(badge) badge.style.display='block';
+}
+
+function syncDrawerChips(){
+  const el=document.getElementById('drawerChips');
+  if(!el) return;
+  el.innerHTML=customAlerts.map((a,i)=>{
+    const p=[];
+    if(a.types&&a.types.length) p.push(a.types.join(', '));
+    if(a.airline) p.push(AIRLINE_NAMES[a.airline]||a.airline);
+    if(a.callsign) p.push(a.callsign);
+    if(a.alt) p.push('<'+a.alt.toLocaleString()+'ft');
+    return '<div class="alert-chip">'+p.join(' · ')+'<button class="chip-remove" onclick="removeAlert('+i+');syncDrawerChips()">×</button></div>';
+  }).join('');
+}
+
+function populatePreciousDrawer(){
+  // Reuse precious cargo form content
+  const body=document.getElementById('preciousDrawer');
+  if(!body) return;
+}
+
+function syncSettingsDrawer(){
+  const r=document.getElementById('radius').value;
+  document.getElementById('radiusDrawer').value=r;
+  document.getElementById('radiusValDrawer').textContent=r+' mi';
+}
+
+function syncRadiusAll(val){
+  document.getElementById('radius').value=val;
+  if(document.getElementById('radiusMobile')) document.getElementById('radiusMobile').value=val;
+  document.getElementById('radiusVal').textContent=val+' mi';
+  if(document.getElementById('radiusValMobile')) document.getElementById('radiusValMobile').textContent=val+' mi';
+  document.getElementById('radiusValDrawer').textContent=val+' mi';
+  if(radiusCircle&&userLat) radiusCircle.setRadius(val/MI_PER_KM*1000);
+}
+
+// Update setInterval2 to also update drawer buttons
+const _origSetInterval2=setInterval2;
+
+// ─── Altitude Filter ──────────────────────────────────────────────────────────
+let altFilterMin=0, altFilterMax=99999;
+
+function setAltPreset(min,max,label){
+  altFilterMin=min; altFilterMax=max;
+  document.getElementById('altMin').value=min;
+  document.getElementById('altMax').value=max;
+  document.getElementById('altDisplay').textContent=
+    max===99999?'All altitudes':min.toLocaleString()+'ft – '+max.toLocaleString()+'ft';
+  document.querySelectorAll('.alt-preset').forEach(b=>b.classList.remove('active'));
+  event.target.closest('.alt-preset').classList.add('active');
+  // Badge on toolbar
+  const badge=document.getElementById('mtAltBadge');
+  if(badge) badge.style.display=(max===99999&&min===0)?'none':'block';
+  applyAltFilter();
+}
+
+function updateAltFilter(){
+  altFilterMin=parseInt(document.getElementById('altMin').value)||0;
+  altFilterMax=parseInt(document.getElementById('altMax').value)||99999;
+  const display=altFilterMax>=99999?'All altitudes':
+    altFilterMin.toLocaleString()+'ft – '+altFilterMax.toLocaleString()+'ft';
+  document.getElementById('altDisplay').textContent=display;
+  document.querySelectorAll('.alt-preset').forEach(b=>b.classList.remove('active'));
+  const badge=document.getElementById('mtAltBadge');
+  if(badge) badge.style.display=(altFilterMax>=99999&&altFilterMin===0)?'none':'block';
+  applyAltFilter();
+}
+
+function applyAltFilter(){
+  // Re-render with filter applied
+  renderFlightList();
+  if(currentView==='map') updateMapMarkers();
+  drawRadar();
+}
+
+// Override matchesAltFilter used in renderFlightList
+function passesAltFilter(f){
+  if(altFilterMin===0&&altFilterMax>=99999) return true;
+  const ft=f.baro_altitude?f.baro_altitude*3.281:0;
+  return ft>=altFilterMin&&ft<=altFilterMax;
+}
+
+// ─── Airport Board ────────────────────────────────────────────────────────────
+let currentAirport=null;
+let abCurrentTab='arr';
+
+function openAirportBoard(airport){
+  currentAirport=airport;
+  document.getElementById('airportDrawerTitle').textContent='✈ '+airport.code+' — '+airport.name;
+  switchABTab('arr');
+  openDrawer('airport');
+}
+
+function switchABTab(tab){
+  abCurrentTab=tab;
+  document.getElementById('abTabArr').classList.toggle('active',tab==='arr');
+  document.getElementById('abTabDep').classList.toggle('active',tab==='dep');
+  renderAirportBoard();
+}
+
+function renderAirportBoard(){
+  if(!currentAirport||!flights.length){
+    document.getElementById('airportBoardContent').innerHTML='<div class="log-empty">No flight data available</div>';
+    return;
+  }
+  const ap=currentAirport;
+  // Arrivals: flights heading toward airport (within 80mi, descending or low)
+  // Departures: flights moving away from airport (within 40mi, climbing or low)
+  const nearFlights=flights.filter(f=>{
+    const d=haversine(ap.lat,ap.lon,f.latitude,f.longitude)*MI_PER_KM;
+    return d<=80;
+  });
+
+  let list;
+  if(abCurrentTab==='arr'){
+    // Arrivals: within 80mi, altitude below 25000ft or descending
+    list=nearFlights.filter(f=>{
+      const ft=f.baro_altitude?f.baro_altitude*3.281:0;
+      return ft<25000||ft===0;
+    }).sort((a,b)=>a.dist-b.dist);
+  } else {
+    // Departures: within 40mi, low altitude climbing
+    list=nearFlights.filter(f=>{
+      const d=haversine(ap.lat,ap.lon,f.latitude,f.longitude)*MI_PER_KM;
+      const ft=f.baro_altitude?f.baro_altitude*3.281:0;
+      return d<=40&&ft<15000;
+    }).sort((a,b)=>{
+      const da=haversine(ap.lat,ap.lon,a.latitude,a.longitude);
+      const db=haversine(ap.lat,ap.lon,b.latitude,b.longitude);
+      return da-db;
+    });
+  }
+
+  if(!list.length){
+    document.getElementById('airportBoardContent').innerHTML=
+      '<div class="log-empty">No '+(abCurrentTab==='arr'?'arrivals':'departures')+' detected nearby</div>';
+    return;
+  }
+
+  document.getElementById('airportBoardContent').innerHTML=list.slice(0,15).map(f=>{
+    const airline=getAirlineName(f.callsign)||f.origin_country||'—';
+    const ft=f.baro_altitude?Math.round(f.baro_altitude*3.281).toLocaleString()+'ft':'On ground';
+    const d=haversine(ap.lat,ap.lon,f.latitude,f.longitude)*MI_PER_KM;
+    return `<div class="ab-flight-row" onclick="highlightFlight('${f.icao24}')">
+      <div class="ab-callsign">${f.callsign}</div>
+      <div class="ab-airline">${airline}</div>
+      <div class="ab-alt">${ft}<br><span style="color:var(--muted);font-size:.6rem">${d.toFixed(1)}mi</span></div>
+    </div>`;
+  }).join('');
+}
+
+function highlightFlight(icao24){
+  const f=flights.find(fl=>fl.icao24===icao24);
+  if(!f||!leafletMap) return;
+  closeAllDrawers();
+  if(f.latitude&&f.longitude){
+    leafletMap.setView([f.latitude,f.longitude],12);
+    const marker=mapMarkers.find((_,i)=>flights[i]&&flights[i].icao24===icao24);
+    if(marker) marker.openPopup();
+  }
+}
+
+// ─── Override updateMapMarkers to wire up airport clicks ─────────────────────
+// Update airport marker click to open board
+const _origAddAirportMarkers=addAirportMarkers;
+function addAirportMarkers(){
+  if(!leafletMap||!userLat) return;
+  airportMarkers.forEach(m=>m.remove());airportMarkers=[];
+  const radiusMi=parseInt(document.getElementById('radius').value)||50;
+  MAJOR_AIRPORTS.forEach(ap=>{
+    const d=haversine(userLat,userLon,ap.lat,ap.lon)*MI_PER_KM;
+    if(d>radiusMi*1.5) return;
+    const icon=L.divIcon({className:'',html:'<div style="display:flex;align-items:center;gap:3px"><div style="width:8px;height:8px;background:#aaff00;border-radius:50%;border:1px solid #0a0d14;flex-shrink:0"></div><span class="airport-label">'+ap.code+'</span></div>',iconSize:[60,16],iconAnchor:[4,8]});
+    const m=L.marker([ap.lat,ap.lon],{icon,zIndexOffset:-100}).addTo(leafletMap);
+    m.on('click',()=>openAirportBoard(ap));
+    airportMarkers.push(m);
+  });
+}
+
+// ─── Apply alt filter in flight list ─────────────────────────────────────────
+// Override passesAltFilter check in renderFlightList
+
+
+function toggleBigFellaFromDrawer(){
+  toggleBigFella();
+  updateBigFellaDrawerUI();
+}
+function updateBigFellaDrawerUI(){
+  const statusEl=document.getElementById('bigFellaDrawerStatus');
+  const toggleBtn=document.getElementById('bigFellaDrawerToggle');
+  const mtBtn=document.getElementById('mtBigFella');
+  if(statusEl) statusEl.textContent=bigFellaActive?'Currently ON — watching for big planes':'Currently OFF';
+  if(toggleBtn){
+    toggleBtn.textContent=bigFellaActive?'Turn OFF':'Turn ON';
+    toggleBtn.style.background=bigFellaActive?'rgba(255,140,0,.3)':'rgba(255,140,0,.15)';
+  }
+  if(mtBtn) mtBtn.classList.toggle('active',bigFellaActive);
+}
+
+function addPreciousCargoFromDrawer(){
+  const flight=document.getElementById('cargoFlightDrawer').value.toUpperCase().trim();
+  const date=document.getElementById('cargoDateDrawer').value;
+  const label=document.getElementById('cargoLabelDrawer').value.trim();
+  if(!flight){showToast('⚠️','Missing Flight','Enter a flight number.');return;}
+  if(!date){showToast('⚠️','Missing Date','Select a flight date.');return;}
+  if(preciousCargos.some(c=>c.flight===flight&&c.date===date)){showToast('⚠️','Duplicate','Already tracking this flight.');return;}
+  const cargo={flight,date,label,status:'Scheduled',emailedDep:false,emailedLanding:false,emailedHourBefore:false};
+  preciousCargos.push(cargo);
+  document.getElementById('cargoFlightDrawer').value='';
+  document.getElementById('cargoLabelDrawer').value='';
+  renderCargoListDrawer();
+  showToast('❤️',flight+' added','Tracking '+flight+' on '+date,false,false,true);
+  fetchCargoStatus(cargo);
+  if(!cargoPollingInterval) cargoPollingInterval=setInterval(pollAllCargo,60000);
+  // update badge
+  const btn=document.getElementById('mtPrecious');
+  if(btn) btn.classList.add('has-badge');
+}
+
+function renderCargoListDrawer(){
+  const el=document.getElementById('cargoListDrawer');
+  if(!el) return;
+  el.innerHTML=preciousCargos.map((c,i)=>
+    '<div class="cargo-item"><span style="font-size:18px">❤️</span><div class="cargo-item-info"><div class="cargo-flight">'+c.flight+(c.label?' — '+c.label:'')+'</div><div class="cargo-date">'+c.date+'</div><span class="cargo-status">'+c.status+'</span></div><button class="cargo-remove" onclick="removeCargo('+i+');renderCargoListDrawer()">×</button></div>'
+  ).join('');
+}
+
+// Override openDrawer to also handle bigfella and update UI
+function openDrawer(name){
+  closeAllDrawers();
+  const drawer=document.getElementById(name+'Drawer');
+  const overlay=document.getElementById('drawerOverlay');
+  if(!drawer){console.warn('No drawer found:',name+'Drawer');return;}
+  if(name==='alerts') populateAlertsDrawer();
+  if(name==='precious'){
+    // Set today as default date
+    const di=document.getElementById('cargoDateDrawer');
+    if(di&&!di.value) di.value=new Date().toISOString().split('T')[0];
+    renderCargoListDrawer();
+  }
+  if(name==='settings') syncSettingsDrawer();
+  if(name==='bigfella') updateBigFellaDrawerUI();
+  overlay.classList.add('open');
+  setTimeout(()=>drawer.classList.add('open'),10);
+  currentDrawer=name;
+  document.querySelectorAll('.mt-btn').forEach(b=>b.classList.remove('active'));
+  const btnId='mt'+name.charAt(0).toUpperCase()+name.slice(1);
+  const btn=document.getElementById(btnId);
+  if(btn) btn.classList.add('active');
+}
+
 window.addEventListener('resize',()=>{if(!scanning&&currentView==='radar')drawRadar();});
 </script>
+
+<!-- Map Toolbar - Fixed at bottom on mobile -->
+<div class="map-toolbar" id="mapToolbar">
+  <button class="mt-btn" id="mtAlerts" onclick="openDrawer('alerts')">
+    <div class="mt-btn-icon">🔔</div><div class="mt-btn-label">Alerts</div><div class="mt-badge" id="mtAlertsBadge"></div>
+  </button>
+  <button class="mt-btn" id="mtBigFella" onclick="openDrawer('bigfella')">
+    <div class="mt-btn-icon">🦧</div><div class="mt-btn-label">Big Fella</div>
+  </button>
+  <button class="mt-btn" id="mtPrecious" onclick="openDrawer('precious')">
+    <div class="mt-btn-icon">❤️</div><div class="mt-btn-label" style="font-size:.44rem;line-height:1.2">Precious<br>Cargo</div>
+  </button>
+  <button class="mt-btn" id="mtAltitude" onclick="openDrawer('altitude')">
+    <div class="mt-btn-icon">📏</div><div class="mt-btn-label">Altitude</div><div class="mt-badge" id="mtAltBadge"></div>
+  </button>
+  <button class="mt-btn" id="mtSettings" onclick="openDrawer('settings')">
+    <div class="mt-btn-icon">⚙️</div><div class="mt-btn-label">Settings</div>
+  </button>
+</div>
 </body>
 </html>

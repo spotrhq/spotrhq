@@ -803,6 +803,19 @@ input[type=range]::-moz-range-thumb{
 .onboarding-dismiss{font-size:.95rem;background:none;border:none;color:var(--muted);cursor:pointer;flex-shrink:0;opacity:.5;}
 .onboarding-dismiss:hover{opacity:1;}
 </style>
+<script>
+window.onerror=function(msg,src,line,col,err){
+  var d=document.getElementById('_errbanner');
+  if(!d){d=document.createElement('div');d.id='_errbanner';d.style='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:12px;padding:8px;z-index:99999;word-break:break-all;max-height:40vh;overflow:auto;';document.body.appendChild(d);}
+  d.innerHTML+='<div>❌ '+msg+' — '+src+':'+line+'</div>';
+  return false;
+};
+window.addEventListener('unhandledrejection',function(e){
+  var d=document.getElementById('_errbanner');
+  if(!d){d=document.createElement('div');d.id='_errbanner';d.style='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:12px;padding:8px;z-index:99999;word-break:break-all;max-height:40vh;overflow:auto;';document.body.appendChild(d);}
+  d.innerHTML+='<div>⚠️ '+(e.reason||e)+'</div>';
+});
+</script>
 </head>
 <body>
 
@@ -1480,7 +1493,7 @@ function _toggleEmailCore(input,btn,statusEl){
   btn.textContent='Disable';btn.classList.add('active');
   input.disabled=true;
   statusEl.textContent='✅ Active — '+email;statusEl.className='email-status on';
-  showToast('📧','Email Alerts On','We'll email '+email+' when alerts trigger.');
+  showToast('📧','Email Alerts On',"We'll email "+email+' when alerts trigger.');
 }
 
 async function sendEmailAlert(params){

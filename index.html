@@ -402,13 +402,22 @@ input[type=range]::-moz-range-thumb{
 .map-panel{overflow:visible;}
 #mapView{
   height:var(--map-h);
+  min-height:var(--map-h);
   display:block;
   position:relative;
+  overflow:hidden;
 }
 .leaflet-container{
   filter:brightness(.6) saturate(.5);
   border-radius:0;
   height:100%!important;
+}
+.map-panel .panel-header + canvas,
+.map-panel .panel-header + #radarCanvas{display:block;}
+.map-panel #mapView,
+.map-panel #radarCanvas{
+  height:var(--map-h);
+  min-height:var(--map-h);
 }
 #radarCanvas{
   width:100%;
@@ -417,9 +426,10 @@ input[type=range]::-moz-range-thumb{
   cursor:crosshair;
 }
 
-/* ── Map Toolbar (mobile only, inside #mapView) ──── */
+.map-panel{position:relative;overflow:hidden;}
+/* ── Map Toolbar (overlays both map and radar) ──── */
 .map-toolbar{
-  display:none;
+  display:flex;
   position:absolute;
   bottom:14px;
   left:50%;
@@ -767,9 +777,15 @@ input[type=range]::-moz-range-thumb{
   .grid>div:last-child{order:1;width:100%;box-sizing:border-box;}
   .grid>div{width:100%;box-sizing:border-box;}
   #desktopSettingsPanel,#alertRulesPanel{display:none!important;}
-  header{padding:8px 12px;}
-  .logo img{height:40px;}
-  .logo-name{font-size:1.1rem;}
+  header{padding:6px 10px;gap:6px;}
+  .logo img{height:36px;}
+  .logo-name{font-size:1rem;}
+  .logo-sub{display:none;}
+  header{flex-wrap:wrap;}
+  .header-right{gap:4px;flex-wrap:nowrap;}
+  .header-btn{padding:4px 7px;font-size:.5rem;letter-spacing:.3px;}
+  .status-pill{max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .status-pill{font-size:.52rem;padding:3px 7px;gap:4px;}
   .stats-bar{padding:6px 12px;gap:10px;font-size:.58rem;}
   .container{padding:0 10px;}
   main{padding:10px 0 130px;}
@@ -803,19 +819,6 @@ input[type=range]::-moz-range-thumb{
 .onboarding-dismiss{font-size:.95rem;background:none;border:none;color:var(--muted);cursor:pointer;flex-shrink:0;opacity:.5;}
 .onboarding-dismiss:hover{opacity:1;}
 </style>
-<script>
-window.onerror=function(msg,src,line,col,err){
-  var d=document.getElementById('_errbanner');
-  if(!d){d=document.createElement('div');d.id='_errbanner';d.style='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:12px;padding:8px;z-index:99999;word-break:break-all;max-height:40vh;overflow:auto;';document.body.appendChild(d);}
-  d.innerHTML+='<div>❌ '+msg+' — '+src+':'+line+'</div>';
-  return false;
-};
-window.addEventListener('unhandledrejection',function(e){
-  var d=document.getElementById('_errbanner');
-  if(!d){d=document.createElement('div');d.id='_errbanner';d.style='position:fixed;bottom:0;left:0;right:0;background:#f00;color:#fff;font-size:12px;padding:8px;z-index:99999;word-break:break-all;max-height:40vh;overflow:auto;';document.body.appendChild(d);}
-  d.innerHTML+='<div>⚠️ '+(e.reason||e)+'</div>';
-});
-</script>
 </head>
 <body>
 
@@ -1026,6 +1029,7 @@ window.addEventListener('unhandledrejection',function(e){
   <div class="stat-item"><span class="stat-label">🦧 Big Fellas:</span><span class="stat-value orange" id="statBF">0</span></div>
   <div class="stat-item"><span class="stat-label">🔔 Alerts:</span><span class="stat-value purple" id="statAlerts">0</span></div>
   <div class="stat-item"><span class="stat-label">❤️ Precious:</span><span class="stat-value pink" id="statPrecious">0</span></div>
+  <div class="stat-item"><span class="stat-label">🏅 Badges:</span><span class="stat-value" style="color:var(--gold)" id="statBadges">0</span></div>
   <div class="stat-item"><span class="stat-label">Session:</span><span class="stat-value" id="statTime">0m</span></div>
   <div class="stat-item" style="margin-left:auto">
     <span class="stat-label">⭐ Score:</span>
@@ -1238,10 +1242,10 @@ window.addEventListener('unhandledrejection',function(e){
               </div>
             </div>
           </div>
-          <canvas id="radarCanvas"></canvas>
-          <div id="mapView" style="position:relative">
-            <!-- Map toolbar INSIDE #mapView -->
-            <div class="map-toolbar" id="mapToolbar">
+          <canvas id="radarCanvas" style="width:100%;display:none;cursor:crosshair;"></canvas>
+          <div id="mapView" style="position:relative;"></div>
+          <!-- Map toolbar overlays BOTH map and radar -->
+          <div class="map-toolbar" id="mapToolbar">
               <button class="mt-btn" id="mtAlerts" onclick="openDrawer('alerts')">
                 <div class="mt-btn-icon">🔔</div><div class="mt-btn-label">Alerts</div>
                 <div class="mt-badge" id="mtAlertsBadge"></div>
@@ -1259,9 +1263,8 @@ window.addEventListener('unhandledrejection',function(e){
               <button class="mt-btn" id="mtSettings" onclick="openDrawer('settings')">
                 <div class="mt-btn-icon">⚙️</div><div class="mt-btn-label">Settings</div>
               </button>
-            </div>
-          </div>
-        </div>
+            </div><!-- /map-toolbar -->
+        </div><!-- /map-panel -->
 
         <!-- Daily Challenge -->
         <div id="challengeBanner">
@@ -1311,6 +1314,11 @@ window.addEventListener('unhandledrejection',function(e){
               <button class="tab" onclick="switchTab('alerts',this)">Alert Log</button>
               <button class="tab" onclick="switchTab('badges',this)">🏅 Badges</button>
             </div>
+          </div>
+          <!-- Earned badges strip -->
+          <div id="badgeStrip" style="display:none;padding:7px 12px;border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+            <span style="font-family:var(--font-mono);font-size:.52rem;color:var(--muted);letter-spacing:.8px;margin-right:6px;">BADGES:</span>
+            <span id="badgeStripItems"></span>
           </div>
           <div id="tab-flights" class="tab-content active">
             <div class="filter-row">
@@ -2336,22 +2344,27 @@ function recordStreak(){
 function checkBadges(){
   BADGES.forEach(b=>{
     if(earnedBadges.has(b.id)) return;
-    if(b.check()){earnedBadges.add(b.id);localStorage.setItem('spotrhq_badges',JSON.stringify([...earnedBadges]));showBadgeToast(b);}
+    if(b.check()){earnedBadges.add(b.id);localStorage.setItem('spotrhq_badges',JSON.stringify([...earnedBadges]));}
   });
   renderBadges();
 }
 function renderBadges(){
-  const grid=document.getElementById('badgeGrid');if(!grid) return;
-  grid.innerHTML=BADGES.map(b=>`<div class="badge-item ${earnedBadges.has(b.id)?'earned':''}" title="${b.desc}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`).join('');
-}
-function showBadgeToast(badge){
-  const toast=document.getElementById('badgeToast');
-  document.getElementById('badgeToastIcon').textContent=badge.icon;
-  document.getElementById('badgeToastTitle').textContent='Badge Unlocked: '+badge.name;
-  document.getElementById('badgeToastDesc').textContent=badge.desc;
-  toast.style.display='flex';
-  showToast('🏅','Badge Unlocked!',badge.name+' — '+badge.desc);
-  setTimeout(()=>toast.style.display='none',4000);
+  const strip=document.getElementById('badgeStripItems');
+  const stripWrap=document.getElementById('badgeStrip');
+  const statBadges=document.getElementById('statBadges');
+  const grid=document.getElementById('badgeGrid');
+  if(!strip||!stripWrap) return;
+  const earned=BADGES.filter(b=>earnedBadges.has(b.id));
+  if(statBadges) statBadges.textContent=earned.length;
+  if(earned.length>0){
+    stripWrap.style.display='block';
+    strip.innerHTML=earned.map(b=>`<span title="${b.desc}" style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:10px;padding:2px 7px;margin-right:5px;font-size:.62rem;color:var(--gold);font-family:var(--font-mono);">${b.icon} ${b.name}</span>`).join('');
+  } else {
+    stripWrap.style.display='none';
+  }
+  if(grid){
+    grid.innerHTML=BADGES.map(b=>`<div class="badge-item ${earnedBadges.has(b.id)?'earned':''}" title="${b.desc}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`).join('');
+  }
 }
 
 // ── Daily Challenge ────────────────────────────────────────────────────────

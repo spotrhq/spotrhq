@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>SpotrHQ — Flight Alert Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -831,7 +831,7 @@ input[type=range]::-moz-range-thumb{
       <div style="font-family:var(--font-mono);font-size:.58rem;color:var(--muted);margin-top:4px">What we broke, fixed, and shipped</div>
     </div>
     <div class="rn-version">
-      <div class="rn-ver-header"><span class="rn-ver-num">v0.5</span><span class="rn-ver-title">Finally Works On Mobile</span><span class="rn-ver-date">May 2026</span></div>
+      <div class="rn-ver-header"><span class="rn-ver-num">v0.5</span><span class="rn-ver-title">Finally Works On Mobile</span><span class="rn-ver-date">May 21, 2026</span></div>
       <div class="rn-item">✅ Toolbar is now actually inside the map (not floating in space)</div>
       <div class="rn-item">✅ Scan button no longer disappears after setting location</div>
       <div class="rn-item">✅ JS consts declared before they're used (bold move)</div>
@@ -839,21 +839,21 @@ input[type=range]::-moz-range-thumb{
       <div class="rn-item">🦧 Big Fella alert now works within 1 mile as intended</div>
     </div>
     <div class="rn-version">
-      <div class="rn-ver-header"><span class="rn-ver-num">v0.4</span><span class="rn-ver-title">The Map is the App</span><span class="rn-ver-date">Apr 2026</span></div>
+      <div class="rn-ver-header"><span class="rn-ver-num">v0.4</span><span class="rn-ver-title">The Map is the App</span><span class="rn-ver-date"></span></div>
       <div class="rn-item">✅ Leaflet map with dark tile filter</div>
       <div class="rn-item">✅ Airport markers with arrivals/departures board</div>
       <div class="rn-item">✅ Flight trails and heading arcs</div>
       <div class="rn-item">✅ Planespotters.net photo integration</div>
     </div>
     <div class="rn-version">
-      <div class="rn-ver-header"><span class="rn-ver-num">v0.3</span><span class="rn-ver-title">Cleared for Approach</span><span class="rn-ver-date">Mar 2026</span></div>
+      <div class="rn-ver-header"><span class="rn-ver-num">v0.3</span><span class="rn-ver-title">Cleared for Approach</span><span class="rn-ver-date"></span></div>
       <div class="rn-item">✅ Big Fella alerts go brrrr</div>
       <div class="rn-item">✅ Precious Cargo tracking with email updates</div>
       <div class="rn-item">✅ Sky Stats + Spotter Score</div>
       <div class="rn-item">✅ Daily challenges (we made 10, rotate daily)</div>
     </div>
     <div class="rn-version">
-      <div class="rn-ver-header"><span class="rn-ver-num">v0.1</span><span class="rn-ver-title">First Flight</span><span class="rn-ver-date">Jan 2026</span></div>
+      <div class="rn-ver-header"><span class="rn-ver-num">v0.1</span><span class="rn-ver-title">First Flight</span><span class="rn-ver-date"></span></div>
       <div class="rn-item">🛫 It launched. Barely, but it launched.</div>
       <div class="rn-item">🛫 ZIP code lookup worked (sometimes)</div>
       <div class="rn-item">🛫 Radar swept. People were impressed.</div>
@@ -1688,7 +1688,7 @@ function setInterval2(secs){
 // ── Map ───────────────────────────────────────────────────────────────────
 function initMap(){
   if(!window.L){console.warn('Leaflet not loaded');return;}
-  if(leafletMap){leafletMap.invalidateSize();if(userLat) leafletMap.setView([userLat,userLon],9);return;}
+  if(leafletMap){leafletMap.invalidateSize();return;}
   const center=userLat?[userLat,userLon]:[39.5,-98.35];
   leafletMap=L.map('mapView').setView(center,userLat?9:4);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(leafletMap);
@@ -1708,7 +1708,7 @@ function addUserMapMarker(){
     radius:radiusKm*1000,color:'rgba(0,229,255,0.45)',
     fillColor:'rgba(0,229,255,0.02)',fillOpacity:1,weight:1.5,dashArray:'6 4'
   }).addTo(leafletMap);
-  leafletMap.setView([userLat,userLon],9);
+  if(!userMarker) leafletMap.setView([userLat,userLon],9);
   addAirportMarkers();
 }
 
@@ -2312,7 +2312,6 @@ function addScore(f){
   if(saved.history.length>100) saved.history=saved.history.slice(-100);
   localStorage.setItem('spotrhq_score',JSON.stringify(saved));
   document.getElementById('spotterScore').textContent=saved.total.toLocaleString();
-  showScorePopup('+'+pts,f.callsign);
 }
 function loadScore(){
   const saved=JSON.parse(localStorage.getItem('spotrhq_score')||'{"total":0}');
@@ -2396,7 +2395,7 @@ function checkDailyChallenge(){
     sc.total+=100;
     localStorage.setItem('spotrhq_score',JSON.stringify(sc));
     document.getElementById('spotterScore').textContent=sc.total.toLocaleString();
-    showToast('🎯','Daily Challenge Complete!','You earned 100 bonus points!');
+    // challenge complete - silent
   }
 }
 

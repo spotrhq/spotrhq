@@ -1708,7 +1708,7 @@ function addUserMapMarker(){
     radius:radiusKm*1000,color:'rgba(0,229,255,0.45)',
     fillColor:'rgba(0,229,255,0.02)',fillOpacity:1,weight:1.5,dashArray:'6 4'
   }).addTo(leafletMap);
-  if(!userMarker) leafletMap.setView([userLat,userLon],9);
+  leafletMap.setView([userLat,userLon],9);
   addAirportMarkers();
 }
 
